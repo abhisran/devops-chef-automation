@@ -16,6 +16,7 @@ end
   neovim
   net-tools
   wget
+  conntrack
 ).each do |pkg|
   package pkg do
     action :install
