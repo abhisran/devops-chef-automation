@@ -4,7 +4,6 @@
 # Chef
 .chef/
 .delivery/
-cookbooks/
 berks-cookbooks/
 Berksfile.lock
 Gemfile.lock
