@@ -29,11 +29,11 @@ knife cookbook upload k8s-master k8s-worker -o kubernetes/
 ```bash
 # Master node
 knife bootstrap <MASTER_IP> --node-name k8s-master-01 \
-  --run-list 'recipe[apt],recipe[k8s-master]' --ssh-user ubuntu --sudo
+  --run-list 'recipe[apt],recipe[package],recipe[k8s-master]' --ssh-user ubuntu --sudo
 
 # Worker node
 knife bootstrap <WORKER_IP> --node-name k8s-worker-01 \
-  --run-list 'recipe[apt],recipe[k8s-worker]' --ssh-user ubuntu --sudo
+  --run-list 'recipe[apt],recipe[package],recipe[k8s-worker]' --ssh-user ubuntu --sudo
 ```
 
 ### 3️⃣ Apply updates (when needed)
@@ -65,10 +65,11 @@ knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user ubuntu
 
 ## 📋 Assigning Cookbooks to Nodes
 
-| Node Type | Cookbook to Assign | Command |
-|-----------|-------------------|--------|
-| **Master** | `k8s-master` | `knife node run_list set k8s-master-01 'recipe[apt],recipe[k8s-master]'` |
-| **Worker** | `k8s-worker` | `knife node run_list set k8s-worker-01 'recipe[apt],recipe[k8s-worker]'` |
+| Node Type | Cookbooks | Command |
+|-----------|-----------|--------|
+| **Master** | apt, package, k8s-master | `knife node run_list set k8s-master-01 'recipe[apt],recipe[package],recipe[k8s-master]'` |
+| **Worker** | apt, package, k8s-worker | `knife node run_list set k8s-worker-01 'recipe[apt],recipe[package],recipe[k8s-worker]'` |
+| **Any Node** | apt, package | `knife node run_list set node-01 'recipe[apt],recipe[package]'` |
 
 ---
 
