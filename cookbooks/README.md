@@ -65,13 +65,10 @@ knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user ubuntu
 
 ## 📋 Assigning Cookbooks to Nodes
 
-```bash
-# Set run list for a node
-knife node run_list set k8s-master-01 'recipe[apt],recipe[k8s-master]'
-
-# Add recipe to existing run list
-knife node run_list add k8s-worker-01 'recipe[k8s-worker]'
-```
+| Node Type | Cookbook to Assign | Command |
+|-----------|-------------------|--------|
+| **Master** | `k8s-master` | `knife node run_list set k8s-master-01 'recipe[apt],recipe[k8s-master]'` |
+| **Worker** | `k8s-worker` | `knife node run_list set k8s-worker-01 'recipe[apt],recipe[k8s-worker]'` |
 
 ---
 
