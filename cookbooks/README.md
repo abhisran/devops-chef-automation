@@ -100,7 +100,7 @@ cookbook_path ["/path/to/kubernetes", "/path/to/system"]
 
 ## 👤 Author
 
-**Abhishek Ranjan** • abhisran60@gmail.com
+**Abhishek Ranjan** • abhisran6@gmail.com
 
 ---
 
