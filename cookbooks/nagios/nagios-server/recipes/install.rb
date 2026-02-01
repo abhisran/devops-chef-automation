@@ -9,6 +9,7 @@ when 'debian'
     libgd-dev
     libssl-dev
     unzip
+    apache2-utils
   )
 when 'rhel', 'fedora'
   package %w(
@@ -24,6 +25,7 @@ when 'rhel', 'fedora'
     net-snmp
     openssl-devel
     unzip
+    httpd-tools
   )
 else
   raise "Unsupported platform family: #{node['platform_family']}. This cookbook supports debian and rhel families."
@@ -72,8 +74,17 @@ execute 'compile_nagios' do
     make install-init
     make install-config
     make install-commandmode
+    make install-webconf
   EOH
   not_if { ::File.exist?("#{node['nagios']['install_dir']}/bin/nagios") }
+end
+
+# Install webconf separately to handle existing installations
+execute 'install_webconf' do
+  cwd "#{node['nagios']['src_dir']}/nagios-#{node['nagios']['version']}"
+  command 'make install-webconf'
+  only_if { ::Dir.exist?("#{node['nagios']['src_dir']}/nagios-#{node['nagios']['version']}") }
+  not_if { ::File.exist?('/etc/apache2/sites-enabled/nagios.conf') || ::File.exist?('/etc/httpd/conf.d/nagios.conf') }
 end
 
 # Install NRPE plugin for check_nrpe command
@@ -92,4 +103,34 @@ execute 'compile_nrpe' do
     make install-plugin
   EOH
   not_if { ::File.exist?("#{node['nagios']['install_dir']}/libexec/check_nrpe") }
+end
+
+# Enable Apache CGI module for Nagios web interface
+case node['platform_family']
+when 'debian'
+  execute 'enable_apache_cgi' do
+    command 'a2enmod cgi rewrite'
+    not_if 'apache2ctl -M 2>/dev/null | grep -q cgi_module'
+    notifies :restart, 'service[apache2]', :delayed
+  end
+when 'rhel', 'fedora'
+  # CGI module is typically enabled by default on RHEL
+  execute 'enable_apache_cgi' do
+    command 'echo "LoadModule cgi_module modules/mod_cgi.so" >> /etc/httpd/conf.modules.d/00-cgi.conf'
+    not_if { ::File.exist?('/etc/httpd/conf.modules.d/00-cgi.conf') }
+    notifies :restart, 'service[httpd]', :delayed
+  end
+end
+
+# Create htpasswd file for Nagios web UI authentication
+execute 'create_nagios_htpasswd' do
+  command "echo '#{node['nagios']['admin_password']}' | htpasswd -ci #{node['nagios']['install_dir']}/etc/htpasswd.users #{node['nagios']['admin_user']}"
+  creates "#{node['nagios']['install_dir']}/etc/htpasswd.users"
+  sensitive true
+end
+
+file "#{node['nagios']['install_dir']}/etc/htpasswd.users" do
+  owner node['nagios']['user']
+  group node['nagios']['group']
+  mode '0640'
 end

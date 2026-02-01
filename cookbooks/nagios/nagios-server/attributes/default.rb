@@ -9,6 +9,8 @@ default['nagios']['install_dir'] = '/usr/local/nagios'
 default['nagios']['src_dir'] = '/usr/local/src'
 
 default['nagios']['admin_user'] = 'nagiosadmin'
+# IMPORTANT: Override this password in your environment/role for production!
+default['nagios']['admin_password'] = 'nagios@123'
 
 # Hostgroup definitions
 # Note: 'linux-servers' is already defined in Nagios default config, so we use 'monitored-servers'
