@@ -11,10 +11,11 @@ default['nagios']['src_dir'] = '/usr/local/src'
 default['nagios']['admin_user'] = 'nagiosadmin'
 
 # Hostgroup definitions
+# Note: 'linux-servers' is already defined in Nagios default config, so we use 'monitored-servers'
 default['nagios']['hostgroups'] = [
   {
-    'name' => 'linux-servers',
-    'alias' => 'All Linux Servers'
+    'name' => 'monitored-servers',
+    'alias' => 'All Monitored Servers'
   },
   {
     'name' => 'k8s-cluster',
@@ -36,32 +37,32 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'master-node',
     'alias' => 'K8s Master Node',
     'address' => '192.168.1.51',
-    'hostgroups' => ['linux-servers', 'k8s-cluster', 'k8s-masters']
+    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-masters']
   },
   {
     'host_name' => 'worker-node-1',
     'alias' => 'K8s Worker Node 1',
     'address' => '192.168.1.52',
-    'hostgroups' => ['linux-servers', 'k8s-cluster', 'k8s-workers']
+    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-workers']
   },
   {
     'host_name' => 'worker-node-2',
     'alias' => 'K8s Worker Node 2',
     'address' => '192.168.1.53',
-    'hostgroups' => ['linux-servers', 'k8s-cluster', 'k8s-workers']
+    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-workers']
   },
   {
     'host_name' => 'chef-server',
     'alias' => 'Chef Server',
     'address' => '192.168.1.54',
-    'hostgroups' => ['linux-servers']
+    'hostgroups' => ['monitored-servers']
   }
 ]
 
 # Service definitions by hostgroup
 # Each entry defines services that apply to a specific hostgroup
 default['nagios']['hostgroup_services'] = {
-  'linux-servers' => [
+  'monitored-servers' => [
     { 'description' => 'Disk Usage', 'check_command' => 'check_nrpe!check_disk' },
     { 'description' => 'Load Average', 'check_command' => 'check_nrpe!check_load' },
     { 'description' => 'Memory Usage', 'check_command' => 'check_nrpe!check_mem' },
