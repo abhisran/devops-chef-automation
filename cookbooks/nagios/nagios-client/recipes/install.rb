@@ -25,7 +25,7 @@ when 'debian'
 when 'rhel', 'fedora'
   # Enable EPEL repository for NRPE packages
   package 'epel-release' do
-    only_if { node['platform_family'] == 'rhel' }
+    only_if { platform_family?('rhel') }
   end
 
   package %w(

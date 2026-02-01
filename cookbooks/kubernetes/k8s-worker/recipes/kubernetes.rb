@@ -69,7 +69,7 @@ end
 execute 'hold-k8s-packages' do
   command "apt-mark hold #{node['kubernetes']['packages'].join(' ')}"
   live_stream false
-  not_if "apt-mark showhold | grep -q kubelet"
+  not_if 'apt-mark showhold | grep -q kubelet'
 end
 
 # Do not start kubelet yet - it will be managed by kubeadm

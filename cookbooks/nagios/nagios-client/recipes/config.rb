@@ -2,15 +2,14 @@
 nrpe_config_file = '/etc/nagios/nrpe.cfg'
 
 # Determine NRPE local config file for custom commands
-nrpe_local_config = case node['platform_family']
-                    when 'rhel', 'fedora'
+nrpe_local_config = if platform_family?('rhel', 'fedora')
                       '/etc/nrpe.d/chef_commands.cfg'
                     else
                       '/etc/nagios/nrpe_local.cfg'
                     end
 
 # Create nrpe.d directory for RHEL if needed
-if node['platform_family'] == 'rhel' || node['platform_family'] == 'fedora'
+if platform_family?('rhel', 'fedora')
   directory '/etc/nrpe.d' do
     owner 'root'
     group 'root'
@@ -37,14 +36,14 @@ template nrpe_config_file do
     plugin_dir: node['nagios']['nrpe']['plugin_dir'],
     commands: node['nagios']['nrpe']['commands'],
     custom_commands: node['nagios']['nrpe']['custom_commands'],
-    include_dir: (node['platform_family'] == 'rhel' || node['platform_family'] == 'fedora') ? '/etc/nrpe.d' : nil,
-    include_local: node['platform_family'] == 'debian' ? '/etc/nagios/nrpe_local.cfg' : nil
+    include_dir: platform_family?('rhel', 'fedora') ? '/etc/nrpe.d' : nil,
+    include_local: platform_family?('debian') ? '/etc/nagios/nrpe_local.cfg' : nil
   )
   notifies :restart, 'service[nrpe]', :delayed
 end
 
 # Deploy local config file for custom commands (Debian)
-if node['platform_family'] == 'debian'
+if platform_family?('debian')
   template nrpe_local_config do
     source 'nrpe_local.cfg.erb'
     owner 'root'

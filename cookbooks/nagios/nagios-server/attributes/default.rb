@@ -17,20 +17,20 @@ default['nagios']['admin_password'] = 'nagios@123'
 default['nagios']['hostgroups'] = [
   {
     'name' => 'monitored-servers',
-    'alias' => 'All Monitored Servers'
+    'alias' => 'All Monitored Servers',
   },
   {
     'name' => 'k8s-cluster',
-    'alias' => 'Kubernetes Cluster'
+    'alias' => 'Kubernetes Cluster',
   },
   {
     'name' => 'k8s-masters',
-    'alias' => 'Kubernetes Master Nodes'
+    'alias' => 'Kubernetes Master Nodes',
   },
   {
     'name' => 'k8s-workers',
-    'alias' => 'Kubernetes Worker Nodes'
-  }
+    'alias' => 'Kubernetes Worker Nodes',
+  },
 ]
 
 # Monitored hosts configuration
@@ -39,26 +39,26 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'master-node',
     'alias' => 'K8s Master Node',
     'address' => '192.168.1.51',
-    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-masters']
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-masters),
   },
   {
     'host_name' => 'worker-node-1',
     'alias' => 'K8s Worker Node 1',
     'address' => '192.168.1.52',
-    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-workers']
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
   },
   {
     'host_name' => 'worker-node-2',
     'alias' => 'K8s Worker Node 2',
     'address' => '192.168.1.53',
-    'hostgroups' => ['monitored-servers', 'k8s-cluster', 'k8s-workers']
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
   },
   {
     'host_name' => 'chef-server',
     'alias' => 'Chef Server',
     'address' => '192.168.1.54',
-    'hostgroups' => ['monitored-servers']
-  }
+    'hostgroups' => ['monitored-servers'],
+  },
 ]
 
 # Service definitions by hostgroup
@@ -73,6 +73,6 @@ default['nagios']['hostgroup_services'] = {
     { 'description' => 'Zombie Processes', 'check_command' => 'check_nrpe!check_zombie_procs' },
     { 'description' => 'SSH Service', 'check_command' => 'check_nrpe!check_ssh' },
     { 'description' => 'HTTP Service', 'check_command' => 'check_nrpe!check_http' },
-    { 'description' => 'Logged In Users', 'check_command' => 'check_nrpe!check_users' }
-  ]
+    { 'description' => 'Logged In Users', 'check_command' => 'check_nrpe!check_users' },
+  ],
 }

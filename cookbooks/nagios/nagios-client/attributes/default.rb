@@ -29,7 +29,7 @@ default['nagios']['nrpe']['commands'] = {
   'check_zombie_procs' => '-w 5 -c 10 -s Z',
   'check_ssh' => '-H localhost',
   'check_http' => '-H localhost',
-  'check_users' => '-w 5 -c 10'
+  'check_users' => '-w 5 -c 10',
 }
 
 # Additional custom commands can be added here or via role/environment override

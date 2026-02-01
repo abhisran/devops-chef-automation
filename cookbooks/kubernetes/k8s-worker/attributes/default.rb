@@ -1,7 +1,7 @@
 # Kubernetes version
 default['kubernetes']['version'] = '1.31'
 default['kubernetes']['packages'] = %w(kubelet kubeadm kubectl)
-default['kubernetes']['cni_version'] = '1.4.0'  
+default['kubernetes']['cni_version'] = '1.4.0'
 
 # Container runtime
 default['kubernetes']['container_runtime'] = {
