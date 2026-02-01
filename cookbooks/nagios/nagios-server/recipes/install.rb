@@ -10,6 +10,10 @@ when 'debian'
     libssl-dev
     unzip
     apache2-utils
+    monitoring-plugins
+    monitoring-plugins-basic
+    monitoring-plugins-common
+    monitoring-plugins-standard
   )
 when 'rhel', 'fedora'
   package %w(
@@ -26,9 +30,21 @@ when 'rhel', 'fedora'
     openssl-devel
     unzip
     httpd-tools
+    nagios-plugins-all
   )
 else
   raise "Unsupported platform family: #{node['platform_family']}. This cookbook supports debian and rhel families."
+end
+
+# Create symlinks for Nagios plugins (Debian packages install to /usr/lib/nagios/plugins)
+case node['platform_family']
+when 'debian'
+  # Symlink plugins from Debian location to Nagios expected location
+  execute 'symlink_nagios_plugins' do
+    command "for plugin in /usr/lib/nagios/plugins/check_*; do ln -sf \"$plugin\" #{node['nagios']['install_dir']}/libexec/; done"
+    only_if { ::Dir.exist?('/usr/lib/nagios/plugins') }
+    not_if { ::File.symlink?("#{node['nagios']['install_dir']}/libexec/check_ping") }
+  end
 end
 
 group node['nagios']['group']
@@ -139,6 +155,6 @@ end
 
 file "#{node['nagios']['install_dir']}/etc/htpasswd.users" do
   owner node['nagios']['user']
-  group node['nagios']['group']
+  group node['nagios']['cmd_group']
   mode '0640'
 end

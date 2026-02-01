@@ -63,16 +63,16 @@ default['nagios']['monitored_hosts'] = [
 
 # Service definitions by hostgroup
 # Each entry defines services that apply to a specific hostgroup
+# Note: Command names must match those defined in the NRPE client config
 default['nagios']['hostgroup_services'] = {
   'monitored-servers' => [
     { 'description' => 'Disk Usage', 'check_command' => 'check_nrpe!check_disk' },
     { 'description' => 'Load Average', 'check_command' => 'check_nrpe!check_load' },
-    { 'description' => 'Memory Usage', 'check_command' => 'check_nrpe!check_mem' },
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
     { 'description' => 'Total Processes', 'check_command' => 'check_nrpe!check_procs' },
     { 'description' => 'Zombie Processes', 'check_command' => 'check_nrpe!check_zombie_procs' },
     { 'description' => 'SSH Service', 'check_command' => 'check_nrpe!check_ssh' },
     { 'description' => 'HTTP Service', 'check_command' => 'check_nrpe!check_http' },
-    { 'description' => 'CPU Usage', 'check_command' => 'check_nrpe!check_cpu' }
+    { 'description' => 'Logged In Users', 'check_command' => 'check_nrpe!check_users' }
   ]
 }

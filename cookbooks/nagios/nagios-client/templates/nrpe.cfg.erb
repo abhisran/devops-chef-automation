@@ -1,0 +1,86 @@
+#############################################################################
+#
+#  NRPE Configuration File
+#  Managed by Chef - DO NOT EDIT MANUALLY
+#
+#############################################################################
+
+# LOG FACILITY
+log_facility=daemon
+
+# LOG FILE
+# This is optional, if not set, logs go to syslog
+# log_file=/var/log/nrpe.log
+
+# DEBUGGING OPTION
+debug=<%= @debug %>
+
+# PID FILE
+pid_file=/var/run/nagios/nrpe.pid
+
+# SERVER PORT NUMBER
+server_port=<%= @server_port %>
+
+# SERVER ADDRESS
+# Leave commented to bind to all interfaces
+# server_address=127.0.0.1
+
+# NRPE USER
+nrpe_user=<%= @nrpe_user %>
+
+# NRPE GROUP
+nrpe_group=<%= @nrpe_group %>
+
+# ALLOWED HOST ADDRESSES
+# Comma-separated list of IP addresses or hostnames that are allowed to talk to NRPE
+allowed_hosts=<%= @allowed_hosts %>
+
+# COMMAND ARGUMENT PROCESSING
+# 0 = do not allow arguments (more secure)
+# 1 = allow arguments (required for some checks with dynamic thresholds)
+dont_blame_nrpe=<%= @dont_blame_nrpe %>
+
+# BASH COMMAND SUBSTITUTION
+# 0 = do not allow bash command substitutions (more secure)
+# 1 = allow bash command substitutions
+allow_bash_command_substitution=<%= @allow_bash_command_substitution %>
+
+# COMMAND TIMEOUT
+command_timeout=<%= @command_timeout %>
+
+# CONNECTION TIMEOUT
+connection_timeout=<%= @connection_timeout %>
+
+# WEEK RANDOM SEED OPTION
+allow_weak_random_seed=1
+
+<% if @include_dir -%>
+# INCLUDE CONFIG DIRECTORY
+include_dir=<%= @include_dir %>
+<% end -%>
+
+<% if @include_local -%>
+# INCLUDE LOCAL CONFIG
+# Include any local configuration overrides
+include=<%= @include_local %>
+<% end -%>
+
+#############################################################################
+# COMMAND DEFINITIONS
+# These are the check commands that the Nagios server can request
+#############################################################################
+
+<% @commands.each do |command_name, command_args| -%>
+<% if command_name == 'check_procs' || command_name == 'check_zombie_procs' -%>
+command[<%= command_name %>]=<%= @plugin_dir %>/check_procs <%= command_args %>
+<% else -%>
+command[<%= command_name %>]=<%= @plugin_dir %>/<%= command_name %> <%= command_args %>
+<% end -%>
+<% end -%>
+
+<% unless @include_local -%>
+# Custom commands (only included here if not using separate local config file)
+<% @custom_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+<% end -%>
