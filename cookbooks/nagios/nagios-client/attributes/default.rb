@@ -2,9 +2,11 @@
 default['nagios']['nrpe']['user'] = 'nagios'
 default['nagios']['nrpe']['group'] = 'nagios'
 
+# Nagios Server IP - clients accept NRPE connections from this server
+default['nagios']['server']['ip'] = '192.168.1.55'
+
 # Allowed hosts - Nagios server(s) that can connect to this NRPE daemon
-# IMPORTANT: Override this in your environment/role with your Nagios server IP(s)
-default['nagios']['nrpe']['allowed_hosts'] = ['127.0.0.1', '::1']
+default['nagios']['nrpe']['allowed_hosts'] = ['127.0.0.1', '::1', node['nagios']['server']['ip']]
 
 # NRPE daemon settings
 default['nagios']['nrpe']['server_port'] = 5666
