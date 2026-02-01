@@ -110,7 +110,15 @@ case node['platform_family']
 when 'debian'
   execute 'enable_apache_cgi' do
     command 'a2enmod cgi rewrite'
-    not_if 'apache2ctl -M 2>/dev/null | grep -q cgi_module'
+    not_if { ::File.symlink?('/etc/apache2/mods-enabled/cgi.load') }
+    notifies :restart, 'service[apache2]', :delayed
+  end
+
+  # Enable Nagios Apache site config
+  execute 'enable_nagios_site' do
+    command 'a2ensite nagios || a2enconf nagios'
+    only_if { ::File.exist?('/etc/apache2/sites-available/nagios.conf') || ::File.exist?('/etc/apache2/conf-available/nagios.conf') }
+    not_if { ::File.symlink?('/etc/apache2/sites-enabled/nagios.conf') || ::File.symlink?('/etc/apache2/conf-enabled/nagios.conf') }
     notifies :restart, 'service[apache2]', :delayed
   end
 when 'rhel', 'fedora'
