@@ -28,8 +28,10 @@ file '/etc/apt/sources.list.d/docker.list' do
   notifies :run, 'apt_update[update_apt_cache]', :immediately
 end
 
+# Only update apt cache when repository file changes (not on every run)
+# For K8s clusters, apt updates should be done manually during maintenance
 apt_update 'update_apt_cache' do
-  action :update
+  action :nothing
 end
 
 # Install containerd
