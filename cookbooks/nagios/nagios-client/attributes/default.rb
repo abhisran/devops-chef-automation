@@ -30,6 +30,48 @@ default['nagios']['nrpe']['commands'] = {
   'check_ssh' => '-H localhost',
   'check_http' => '-H localhost',
   'check_users' => '-w 5 -c 10',
+
+}
+
+# Kubernetes-specific check commands
+# These are used for monitoring K8s cluster nodes
+default['nagios']['nrpe']['k8s_commands'] = {
+  # Common K8s node services (run on all K8s nodes)
+  'check_kubelet' => '-C kubelet -c 1:',
+  'check_containerd' => '-C containerd -c 1:',
+  'check_containerd_shim' => '-C containerd-shim -c 1:',
+  'check_kube_proxy' => '-C kube-proxy -c 1:',
+  # K8s master components
+  'check_kube_apiserver' => '-C kube-apiserver -c 1:',
+  'check_etcd' => '-C etcd -c 1:',
+  'check_kube_scheduler' => '-C kube-scheduler -c 1:',
+  'check_kube_controller' => '-C kube-controller-manager -c 1:',
+}
+
+# K8s health check commands (these use custom scripts or different plugins)
+default['nagios']['nrpe']['k8s_health_commands'] = {
+  # Check kubelet health endpoint
+  'check_kubelet_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10248 -u /healthz -e 200',
+  # Check if node is ready via kubelet
+  'check_node_ready' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10248 -u /healthz -e 200',
+  # Check kube-proxy health (if metrics enabled)
+  'check_kube_proxy_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10256 -u /healthz -e 200',
+  # Check CoreDNS (runs as pods, check via DNS resolution)
+  'check_dns_resolution' => '/usr/lib/nagios/plugins/check_dns -H kubernetes.default.svc.cluster.local -s 10.96.0.10',
+  # Check container runtime socket
+  'check_containerd_socket' => '/bin/bash -c \'test -S /run/containerd/containerd.sock && echo "OK: containerd socket exists" || (echo "CRITICAL: containerd socket missing"; exit 2)\'',
+}
+
+# K8s master-specific health commands
+default['nagios']['nrpe']['k8s_master_health_commands'] = {
+  # Check API server health endpoint
+  'check_apiserver_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 6443 -S -u /healthz -e 200',
+  # Check etcd health
+  'check_etcd_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 2381 -u /health -e 200',
+  # Check scheduler health
+  'check_scheduler_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10259 -S -u /healthz -e 200',
+  # Check controller-manager health
+  'check_controller_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10257 -S -u /healthz -e 200',
 }
 
 # Additional custom commands can be added here or via role/environment override

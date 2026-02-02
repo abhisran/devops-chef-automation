@@ -20,6 +20,10 @@ default['nagios']['hostgroups'] = [
     'alias' => 'All Monitored Servers',
   },
   {
+    'name' => 'infrastructure-servers',
+    'alias' => 'Infrastructure Servers (non-K8s)',
+  },
+  {
     'name' => 'k8s-cluster',
     'alias' => 'Kubernetes Cluster',
   },
@@ -57,7 +61,7 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'chef-server',
     'alias' => 'Chef Server',
     'address' => '192.168.1.54',
-    'hostgroups' => ['monitored-servers'],
+    'hostgroups' => %w(monitored-servers infrastructure-servers),
   },
 ]
 
@@ -65,14 +69,52 @@ default['nagios']['monitored_hosts'] = [
 # Each entry defines services that apply to a specific hostgroup
 # Note: Command names must match those defined in the NRPE client config
 default['nagios']['hostgroup_services'] = {
+  # Common checks for all monitored servers
   'monitored-servers' => [
     { 'description' => 'Disk Usage', 'check_command' => 'check_nrpe!check_disk' },
+    { 'description' => 'Memory Usage', 'check_command' => 'check_nrpe!check_mem' },
     { 'description' => 'Load Average', 'check_command' => 'check_nrpe!check_load' },
-    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
     { 'description' => 'Total Processes', 'check_command' => 'check_nrpe!check_procs' },
     { 'description' => 'Zombie Processes', 'check_command' => 'check_nrpe!check_zombie_procs' },
     { 'description' => 'SSH Service', 'check_command' => 'check_nrpe!check_ssh' },
-    { 'description' => 'HTTP Service', 'check_command' => 'check_nrpe!check_http' },
     { 'description' => 'Logged In Users', 'check_command' => 'check_nrpe!check_users' },
+  ],
+  # Checks for non-K8s infrastructure servers only
+  # Note: K8s nodes don't run HTTP on port 80 and require swap to be disabled
+  'infrastructure-servers' => [
+    { 'description' => 'HTTP Service', 'check_command' => 'check_nrpe!check_http' },
+    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
+  # Kubernetes cluster checks - all K8s nodes
+  'k8s-cluster' => [
+    # Process checks
+    { 'description' => 'Kubelet Process', 'check_command' => 'check_nrpe!check_kubelet' },
+    { 'description' => 'Containerd Process', 'check_command' => 'check_nrpe!check_containerd' },
+    { 'description' => 'Containerd Shim', 'check_command' => 'check_nrpe!check_containerd_shim' },
+    { 'description' => 'Kube Proxy Process', 'check_command' => 'check_nrpe!check_kube_proxy' },
+    # Health endpoint checks
+    { 'description' => 'Kubelet Health', 'check_command' => 'check_nrpe!check_kubelet_health' },
+    { 'description' => 'Kube Proxy Health', 'check_command' => 'check_nrpe!check_kube_proxy_health' },
+    { 'description' => 'Containerd Socket', 'check_command' => 'check_nrpe!check_containerd_socket' },
+    { 'description' => 'DNS Resolution', 'check_command' => 'check_nrpe!check_dns_resolution' },
+  ],
+  # Kubernetes master-specific checks
+  'k8s-masters' => [
+    # Process checks
+    { 'description' => 'API Server Process', 'check_command' => 'check_nrpe!check_kube_apiserver' },
+    { 'description' => 'etcd Process', 'check_command' => 'check_nrpe!check_etcd' },
+    { 'description' => 'Scheduler Process', 'check_command' => 'check_nrpe!check_kube_scheduler' },
+    { 'description' => 'Controller Manager Process', 'check_command' => 'check_nrpe!check_kube_controller' },
+    # Health endpoint checks
+    { 'description' => 'API Server Health', 'check_command' => 'check_nrpe!check_apiserver_health' },
+    { 'description' => 'etcd Health', 'check_command' => 'check_nrpe!check_etcd_health' },
+    { 'description' => 'Scheduler Health', 'check_command' => 'check_nrpe!check_scheduler_health' },
+    { 'description' => 'Controller Manager Health', 'check_command' => 'check_nrpe!check_controller_health' },
+  ],
+  # Kubernetes worker-specific checks
+  # Note: Worker nodes run kube-proxy (already in k8s-cluster) but no control plane components
+  'k8s-workers' => [
+    # Workers don't have additional unique components beyond what's in k8s-cluster
+    # This hostgroup exists for potential future worker-specific checks
   ],
 }

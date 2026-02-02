@@ -7,6 +7,31 @@
 #
 #############################################################################
 
+# Memory check using free command (no external plugin required)
+# Warn at 80% used, Critical at 90% used
+command[check_mem]=/bin/bash -c 'TOTAL=$(free -m | awk "/^Mem:/{print \$2}"); USED=$(free -m | awk "/^Mem:/{print \$3}"); PCT=$((USED*100/TOTAL)); if [ $PCT -ge <%= @mem_crit || 90 %> ]; then echo "CRITICAL: Memory usage ${PCT}% (${USED}MB/${TOTAL}MB)"; exit 2; elif [ $PCT -ge <%= @mem_warn || 80 %> ]; then echo "WARNING: Memory usage ${PCT}% (${USED}MB/${TOTAL}MB)"; exit 1; else echo "OK: Memory usage ${PCT}% (${USED}MB/${TOTAL}MB)"; exit 0; fi'
+
+<% if @k8s_commands && !@k8s_commands.empty? -%>
+# Kubernetes-specific process check commands
+<% @k8s_commands.each do |command_name, command_args| -%>
+command[<%= command_name %>]=<%= @plugin_dir %>/check_procs <%= command_args %>
+<% end -%>
+
+<% end -%>
+<% if @k8s_health_commands && !@k8s_health_commands.empty? -%>
+# Kubernetes health endpoint checks
+<% @k8s_health_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+
+<% end -%>
+<% if @k8s_master_health_commands && !@k8s_master_health_commands.empty? -%>
+# Kubernetes master-specific health checks
+<% @k8s_master_health_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+
+<% end -%>
 # Custom commands defined via Chef attributes
 <% @custom_commands.each do |command_name, command_line| -%>
 command[<%= command_name %>]=<%= command_line %>

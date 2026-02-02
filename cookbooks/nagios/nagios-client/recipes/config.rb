@@ -51,7 +51,12 @@ if platform_family?('debian')
     mode '0644'
     variables(
       custom_commands: node['nagios']['nrpe']['custom_commands'],
-      plugin_dir: node['nagios']['nrpe']['plugin_dir']
+      k8s_commands: node['nagios']['nrpe']['k8s_commands'],
+      k8s_health_commands: node['nagios']['nrpe']['k8s_health_commands'],
+      k8s_master_health_commands: node['nagios']['nrpe']['k8s_master_health_commands'],
+      plugin_dir: node['nagios']['nrpe']['plugin_dir'],
+      mem_warn: 80,
+      mem_crit: 90
     )
     notifies :restart, 'service[nrpe]', :delayed
   end
