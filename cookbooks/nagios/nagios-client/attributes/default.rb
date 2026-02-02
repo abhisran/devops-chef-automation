@@ -45,7 +45,9 @@ default['nagios']['nrpe']['k8s_commands'] = {
   'check_kube_apiserver' => '-C kube-apiserver -c 1:',
   'check_etcd' => '-C etcd -c 1:',
   'check_kube_scheduler' => '-C kube-scheduler -c 1:',
-  'check_kube_controller' => '-C kube-controller-manager -c 1:',
+  # Note: kube-controller-manager uses -a (argument matching) as the process
+  # may appear with a different command name in some K8s deployments
+  'check_kube_controller' => '-a kube-controller -c 1:',
 }
 
 # K8s health check commands (these use custom scripts or different plugins)
