@@ -1,5 +1,5 @@
 # Kubernetes version
-default['kubernetes']['version'] = '1.31'
+default['kubernetes']['version'] = '1.32'
 default['kubernetes']['packages'] = %w(kubelet kubeadm kubectl)
 default['kubernetes']['cni_version'] = '1.4.0'
 

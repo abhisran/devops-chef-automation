@@ -50,7 +50,7 @@ end
 file '/etc/apt/sources.list.d/kubernetes.list' do
   content "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v#{node['kubernetes']['version']}/deb/ /"
   mode '0644'
-  notifies :run, 'apt_update[update-after-k8s-repo]', :immediately
+  notifies :update, 'apt_update[update-after-k8s-repo]', :immediately
 end
 
 # Update apt after adding repository
