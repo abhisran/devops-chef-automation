@@ -104,7 +104,6 @@ default['nagios']['hostgroup_services'] = {
     { 'description' => 'API Server Process', 'check_command' => 'check_nrpe!check_kube_apiserver' },
     { 'description' => 'etcd Process', 'check_command' => 'check_nrpe!check_etcd' },
     { 'description' => 'Scheduler Process', 'check_command' => 'check_nrpe!check_kube_scheduler' },
-    { 'description' => 'Controller Manager Process', 'check_command' => 'check_nrpe!check_kube_controller' },
     # Health endpoint checks
     { 'description' => 'API Server Health', 'check_command' => 'check_nrpe!check_apiserver_health' },
     { 'description' => 'etcd Health', 'check_command' => 'check_nrpe!check_etcd_health' },
