@@ -22,7 +22,7 @@ end
 # Add Docker repository
 file '/etc/apt/sources.list.d/docker.list' do
   content 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable'
-  notifies :run, 'apt_update[update_apt_cache]', :immediately
+  notifies :update, 'apt_update[update_apt_cache]', :immediately
 end
 
 # Only update apt cache when repository file changes (not on every run)
@@ -67,6 +67,12 @@ end
 
 service 'containerd' do
   action [:enable, :start]
+end
+
+# Hold containerd package to prevent accidental upgrades that could break K8s
+execute 'hold-containerd-package' do
+  command 'apt-mark hold containerd.io'
+  not_if 'apt-mark showhold | grep -q containerd.io'
 end
 
 # Install CNI plugins
