@@ -35,6 +35,14 @@ default['nagios']['hostgroups'] = [
     'name' => 'k8s-workers',
     'alias' => 'Kubernetes Worker Nodes',
   },
+  {
+    'name' => 'jenkins-servers',
+    'alias' => 'Jenkins Controller Nodes',
+  },
+  {
+    'name' => 'jenkins-agents',
+    'alias' => 'Jenkins Agent Nodes',
+  },
 ]
 
 # Monitored hosts configuration
@@ -62,6 +70,18 @@ default['nagios']['monitored_hosts'] = [
     'alias' => 'Chef Server',
     'address' => '192.168.1.54',
     'hostgroups' => %w(monitored-servers infrastructure-servers),
+  },
+  {
+    'host_name' => 'jenkins-server',
+    'alias' => 'Jenkins Controller',
+    'address' => '192.168.1.56',
+    'hostgroups' => %w(monitored-servers jenkins-servers),
+  },
+  {
+    'host_name' => 'jenkins-agent-01',
+    'alias' => 'Jenkins Agent 1',
+    'address' => '192.168.1.57',
+    'hostgroups' => %w(monitored-servers jenkins-agents),
   },
 ]
 
@@ -115,5 +135,17 @@ default['nagios']['hostgroup_services'] = {
   'k8s-workers' => [
     # Workers don't have additional unique components beyond what's in k8s-cluster
     # This hostgroup exists for potential future worker-specific checks
+  ],
+  # Jenkins controller checks
+  'jenkins-servers' => [
+    { 'description' => 'Jenkins Process', 'check_command' => 'check_nrpe!check_jenkins_process' },
+    { 'description' => 'Jenkins Web UI', 'check_command' => 'check_nrpe!check_jenkins_http' },
+    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
+  # Jenkins agent checks
+  'jenkins-agents' => [
+    { 'description' => 'Jenkins Agent User', 'check_command' => 'check_nrpe!check_jenkins_agent_user' },
+    { 'description' => 'Jenkins Agent Work Dir', 'check_command' => 'check_nrpe!check_jenkins_agent_workdir' },
+    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
   ],
 }

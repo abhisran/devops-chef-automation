@@ -1,0 +1,6 @@
+[Service]
+Environment="JENKINS_HOME=<%= @jenkins_home %>"
+Environment="JENKINS_PORT=<%= @http_port %>"
+Environment="JAVA_OPTS=<%= @java_args %>"
+Environment="CASC_JENKINS_CONFIG=<%= @casc_config_path %>"
+User=<%= @jenkins_user %>

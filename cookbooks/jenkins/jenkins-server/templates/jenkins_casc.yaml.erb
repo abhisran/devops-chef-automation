@@ -1,0 +1,44 @@
+jenkins:
+  systemMessage: "Jenkins configured by Chef - Configuration as Code"
+  numExecutors: <%= @controller_executors %>
+<% unless @agents.empty? || @ssh_private_key.to_s.strip.empty? -%>
+  nodes:
+<% @agents.each do |agent| -%>
+    - permanent:
+        name: "<%= agent['name'] %>"
+        remoteFS: "<%= agent['work_dir'] %>"
+        numExecutors: <%= agent['executors'] %>
+        labelString: "<%= agent['label'] %>"
+        nodeDescription: "<%= agent['description'] %>"
+        retentionStrategy: "always"
+        launcher:
+          ssh:
+            host: "<%= agent['host'] %>"
+            port: 22
+            credentialsId: "jenkins-agent-ssh-key"
+            sshHostKeyVerificationStrategy: "nonVerifyingKeyVerificationStrategy"
+            javaPath: "<%= agent['java_path'] || '/usr/bin/java' %>"
+<% end -%>
+<% end -%>
+
+<% unless @agents.empty? || @ssh_private_key.to_s.strip.empty? -%>
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: "jenkins-agent-ssh-key"
+              description: "SSH key for Jenkins agent connectivity"
+              username: "jenkins"
+              privateKeySource:
+                directEntry:
+                  privateKey: |
+<% @ssh_private_key.each_line do |line| -%>
+                    <%= line.rstrip %>
+<% end -%>
+<% end -%>
+
+unclassified:
+  location:
+    url: "<%= @jenkins_url %>"

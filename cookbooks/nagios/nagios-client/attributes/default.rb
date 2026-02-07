@@ -76,5 +76,22 @@ default['nagios']['nrpe']['k8s_master_health_commands'] = {
   'check_controller_health' => '/usr/lib/nagios/plugins/check_http -H localhost -p 10257 -S -u /healthz -e 200',
 }
 
+# Jenkins-specific check commands
+# These are used for monitoring Jenkins server nodes
+default['nagios']['nrpe']['jenkins_commands'] = {
+  'check_jenkins_process' => '-C java -a jenkins -c 1:',
+}
+
+# Jenkins health check commands (server only)
+default['nagios']['nrpe']['jenkins_health_commands'] = {
+  'check_jenkins_http' => '/usr/lib/nagios/plugins/check_http -H localhost -p 8080 -u /login -e 200',
+}
+
+# Jenkins agent-specific check commands
+default['nagios']['nrpe']['jenkins_agent_commands'] = {
+  'check_jenkins_agent_user' => '/bin/bash -c \'id jenkins >/dev/null 2>&1 && echo "OK: jenkins user exists" || (echo "CRITICAL: jenkins user missing"; exit 2)\'',
+  'check_jenkins_agent_workdir' => '/bin/bash -c \'test -d /var/lib/jenkins/agent && echo "OK: agent work directory exists" || (echo "CRITICAL: agent work directory missing"; exit 2)\'',
+}
+
 # Additional custom commands can be added here or via role/environment override
 default['nagios']['nrpe']['custom_commands'] = {}

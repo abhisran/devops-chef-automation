@@ -54,6 +54,9 @@ if platform_family?('debian')
       k8s_commands: node['nagios']['nrpe']['k8s_commands'],
       k8s_health_commands: node['nagios']['nrpe']['k8s_health_commands'],
       k8s_master_health_commands: node['nagios']['nrpe']['k8s_master_health_commands'],
+      jenkins_commands: node['nagios']['nrpe']['jenkins_commands'],
+      jenkins_health_commands: node['nagios']['nrpe']['jenkins_health_commands'],
+      jenkins_agent_commands: node['nagios']['nrpe']['jenkins_agent_commands'],
       plugin_dir: node['nagios']['nrpe']['plugin_dir'],
       mem_warn: 80,
       mem_crit: 90
