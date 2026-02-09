@@ -8,4 +8,6 @@ Chef::Log.level = :info
 
 include_recipe 'jenkins-agent::install'
 include_recipe 'jenkins-agent::config'
+include_recipe 'jenkins-agent::docker'
+include_recipe 'jenkins-agent::kubectl'
 include_recipe 'jenkins-agent::service'

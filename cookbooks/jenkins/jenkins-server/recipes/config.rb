@@ -4,6 +4,8 @@
 #
 # Copyright:: 2025, The Authors, All Rights Reserved.
 
+include_recipe 'chef-vault'
+
 template '/etc/default/jenkins' do
   source 'jenkins_defaults.erb'
   owner 'root'
@@ -55,10 +57,30 @@ directory "#{node['jenkins']['home']}/.ssh" do
   mode '0700'
 end
 
-# Generate SSH keypair so the Jenkins server can SSH into agents
-execute 'generate-jenkins-ssh-key' do
-  command "ssh-keygen -t rsa -b 4096 -f #{node['jenkins']['home']}/.ssh/id_rsa -N '' -C 'jenkins@#{node['hostname']}'"
-  user node['jenkins']['user']
-  creates "#{node['jenkins']['home']}/.ssh/id_rsa"
-  live_stream false
+# Load SSH key pair from Chef Vault
+ruby_block 'load-jenkins-ssh-keys-from-vault' do
+  block do
+    vault = chef_vault_item(
+      node['jenkins']['vault']['name'],
+      node['jenkins']['vault']['item']
+    )
+    node.run_state['jenkins_ssh_private_key'] = vault['private_key']
+    node.run_state['jenkins_ssh_public_key'] = vault['public_key']
+  end
+end
+
+# Deploy private key from vault (PEM format required by Jenkins trilead-api)
+file "#{node['jenkins']['home']}/.ssh/id_rsa" do
+  content lazy { node.run_state['jenkins_ssh_private_key'] }
+  owner node['jenkins']['user']
+  group node['jenkins']['group']
+  mode '0600'
+  sensitive true
+end
+
+file "#{node['jenkins']['home']}/.ssh/id_rsa.pub" do
+  content lazy { "#{node.run_state['jenkins_ssh_public_key']}\n" }
+  owner node['jenkins']['user']
+  group node['jenkins']['group']
+  mode '0644'
 end

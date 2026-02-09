@@ -28,3 +28,9 @@ default['kubernetes']['network_plugin'] = {
   'name' => 'weave',
   'url' => 'https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml',
 }
+
+# Jenkins CI/CD RBAC
+default['kubernetes']['rbac']['jenkins']['enabled'] = true
+default['kubernetes']['rbac']['jenkins']['service_account'] = 'jenkins-deployer'
+default['kubernetes']['rbac']['jenkins']['namespace'] = 'ci-cd'
+default['kubernetes']['rbac']['jenkins']['deploy_namespaces'] = %w(staging production)

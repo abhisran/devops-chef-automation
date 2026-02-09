@@ -9,8 +9,22 @@
 
 return unless node['jenkins']['casc']['enabled']
 
+include_recipe 'chef-vault'
+
 casc_path = node['jenkins']['casc']['config_path']
-ssh_key_path = "#{node['jenkins']['home']}/.ssh/id_rsa"
+
+# Ensure SSH keys are loaded from vault (may already be in run_state from config recipe)
+ruby_block 'load-jenkins-ssh-key-for-casc' do
+  block do
+    unless node.run_state['jenkins_ssh_private_key']
+      vault = chef_vault_item(
+        node['jenkins']['vault']['name'],
+        node['jenkins']['vault']['item']
+      )
+      node.run_state['jenkins_ssh_private_key'] = vault['private_key']
+    end
+  end
+end
 
 template casc_path do
   source 'jenkins_casc.yaml.erb'
@@ -23,7 +37,7 @@ template casc_path do
       agents: node['jenkins']['agents'],
       jenkins_url: node['jenkins']['casc']['jenkins_url'],
       controller_executors: node['jenkins']['casc']['controller_executors'],
-      ssh_private_key: ::File.exist?(ssh_key_path) ? ::File.read(ssh_key_path) : '',
+      ssh_private_key: node.run_state['jenkins_ssh_private_key'] || '',
     }
   }
   notifies :restart, 'service[jenkins]', :delayed

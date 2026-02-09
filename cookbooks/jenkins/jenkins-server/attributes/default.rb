@@ -5,6 +5,9 @@ default['jenkins']['home'] = '/var/lib/jenkins'
 default['jenkins']['user'] = 'jenkins'
 default['jenkins']['group'] = 'jenkins'
 
+default['jenkins']['vault']['name'] = 'jenkins_credentials'
+default['jenkins']['vault']['item'] = 'ssh_keys'
+
 default['jenkins']['casc']['enabled'] = true
 default['jenkins']['casc']['config_path'] = '/var/lib/jenkins/jenkins.yaml'
 default['jenkins']['casc']['jenkins_url'] = 'http://192.168.1.56:8080/'

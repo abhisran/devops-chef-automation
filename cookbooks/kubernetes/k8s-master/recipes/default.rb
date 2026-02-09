@@ -10,3 +10,4 @@ Chef::Log.level = :info
 include_recipe 'k8s-master::containerd'
 include_recipe 'k8s-master::kubernetes'
 include_recipe 'k8s-master::master'
+include_recipe 'k8s-master::rbac'

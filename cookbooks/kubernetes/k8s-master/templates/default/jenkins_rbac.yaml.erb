@@ -1,0 +1,64 @@
+# Managed by Chef - k8s-master::rbac recipe
+# Jenkins CI/CD RBAC configuration
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: <%= @sa_namespace %>
+---
+<% @deploy_namespaces.each do |ns| -%>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: <%= ns %>
+---
+<% end -%>
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: <%= @sa_name %>
+  namespace: <%= @sa_namespace %>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: <%= @sa_name %>-token
+  namespace: <%= @sa_namespace %>
+  annotations:
+    kubernetes.io/service-account.name: <%= @sa_name %>
+type: kubernetes.io/service-account-token
+<% @deploy_namespaces.each do |ns| -%>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-deployer
+  namespace: <%= ns %>
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services", "pods", "configmaps", "secrets", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-deployer
+  namespace: <%= ns %>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jenkins-deployer
+subjects:
+  - kind: ServiceAccount
+    name: <%= @sa_name %>
+    namespace: <%= @sa_namespace %>
+<% end -%>

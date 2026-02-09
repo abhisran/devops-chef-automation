@@ -3,5 +3,7 @@ maintainer 'Abhishek Ranjan'
 maintainer_email 'abhisran60@gmail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures Jenkins server (controller)'
-version '0.1.2'
+version '0.2.0'
 chef_version '>= 16.0'
+
+depends 'chef-vault', '~> 4.0'
