@@ -6,6 +6,7 @@
 .delivery/
 berks-cookbooks/
 Berksfile.lock
+data_bags/
 Gemfile.lock
 *.log
 .kitchen/
