@@ -84,7 +84,7 @@ jq -n --arg kc "$(cat /tmp/jenkins-kubeconfig)" \
 knife vault create jenkins_credentials kubeconfig \
   --json /tmp/jenkins_kubeconfig.json \
   --search 'recipe:jenkins-agent' \
-  --admins 'YOUR_USERNAME'
+  --admins '<CHEF_USERNAME>'
 
 # Clean up
 rm -f /tmp/jenkins-kubeconfig /tmp/jenkins_kubeconfig.json /tmp/k8s-ca.crt
@@ -119,7 +119,15 @@ sudo -u jenkins kubectl --context=production get pods
 
 ## Usage
 
-Add the cookbook to your node's run list:
+### Install & Upload
+
+```bash
+cd jenkins/jenkins-agent
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[jenkins-agent]'

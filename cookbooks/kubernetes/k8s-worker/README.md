@@ -44,7 +44,15 @@ Prepares the node for joining a Kubernetes cluster. After running `chef-client`,
 
 ## Usage
 
-Add the cookbook to your node's run list:
+### Install & Upload
+
+```bash
+cd kubernetes/k8s-worker
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[k8s-worker]'
@@ -59,7 +67,7 @@ After `chef-client` completes, run the join command from the master node:
 kubeadm token create --print-join-command
 
 # On the worker, run the output from above
-kubeadm join <master-ip>:6443 --token <token> --discovery-token-ca-cert-hash <hash>
+kubeadm join <MASTER_IP>:6443 --token <TOKEN> --discovery-token-ca-cert-hash <HASH>
 ```
 
 ### Override Attributes

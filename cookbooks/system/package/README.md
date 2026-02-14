@@ -27,7 +27,15 @@ Updates the apt package cache, then installs the following packages:
 
 ## Usage
 
-Add the cookbook to your node's run list (typically before other cookbooks):
+### Install & Upload
+
+```bash
+cd system/package
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list (typically before other cookbooks):
 
 ```ruby
 run_list 'recipe[package]'

@@ -19,10 +19,10 @@ Installs and configures NRPE (Nagios Remote Plugin Executor) client for Nagios m
 
 | Attribute | Description | Default |
 |-----------|-------------|--------|
-| `node['nagios']['server']['ip']` | Nagios server IP (auto-added to allowed_hosts) | `192.168.1.55` |
+| `node['nagios']['server']['ip']` | Nagios server IP — **must be overridden** (auto-added to allowed_hosts) | `192.168.1.55` |
 | `node['nagios']['nrpe']['user']` | NRPE daemon user | `nagios` |
 | `node['nagios']['nrpe']['group']` | NRPE daemon group | `nagios` |
-| `node['nagios']['nrpe']['allowed_hosts']` | Array of IPs allowed to connect | `['127.0.0.1', '::1', '192.168.1.55']` |
+| `node['nagios']['nrpe']['allowed_hosts']` | Array of IPs allowed to connect | `['127.0.0.1', '::1', node['nagios']['server']['ip']]` |
 | `node['nagios']['nrpe']['server_port']` | NRPE listen port | `5666` |
 | `node['nagios']['nrpe']['dont_blame_nrpe']` | Allow command arguments (0=no, 1=yes) | `0` |
 | `node['nagios']['nrpe']['allow_bash_command_substitution']` | Allow bash command substitution (0=no, 1=yes) | `0` |
@@ -96,9 +96,15 @@ Configured via `node['nagios']['nrpe']['jenkins_commands']` and related attribut
 
 ## Usage
 
-### Basic Usage
+### Install & Upload
 
-Add the cookbook to your node's run list:
+```bash
+cd nagios/nagios-client
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[nagios-client]'
@@ -106,13 +112,13 @@ run_list 'recipe[nagios-client]'
 
 ### Configure Nagios Server Access
 
-The default configuration includes `node['nagios']['server']['ip']` in `allowed_hosts`. Override the server IP if your Nagios server is at a different address:
+**Important:** Override `node['nagios']['server']['ip']` with your Nagios server's actual IP. This value is automatically included in `allowed_hosts` so the NRPE daemon accepts connections from the server:
 
 ```ruby
 default_attributes(
   'nagios' => {
     'server' => {
-      'ip' => '192.168.1.50'
+      'ip' => '<NAGIOS_SERVER_IP>'
     }
   }
 )

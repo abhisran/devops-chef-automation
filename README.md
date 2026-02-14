@@ -1,8 +1,8 @@
-# 🍳 Chef Cookbooks for Kubernetes Automation
+# 🍳 Chef Infrastructure Automation
 
-Automated Kubernetes cluster deployment using Chef. These cookbooks handle everything from container runtime setup to cluster initialization—just upload and run.
+Automated infrastructure deployment using Chef — Kubernetes clusters, Jenkins CI/CD, Nagios monitoring, and system configuration. Upload the cookbooks, assign run lists, and run `chef-client` to provision fully configured nodes.
 
-Perfect for: Quickly spinning up production-ready K8s clusters with consistent configuration across all nodes.
+> **📌 Project Evolution:** This project started as a Kubernetes-only automation toolkit. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), secrets management (Chef Vault), and system configuration — all driven by attributes with no hardcoded values.
 
 ---
 
@@ -10,13 +10,21 @@ Perfect for: Quickly spinning up production-ready K8s clusters with consistent c
 
 ```
 cookbooks/
+├── jenkins/
+│   ├── jenkins-server/    # Controller: JCasC, 30+ plugins, Vault SSH credentials
+│   └── jenkins-agent/     # Agent: Docker CE, kubectl, kubeconfig from Vault
 ├── kubernetes/
-│   ├── k8s-master/    # Master node: containerd, kubeadm, kubelet, Flannel CNI
-│   └── k8s-worker/    # Worker nodes: containerd, kubeadm, kubelet
+│   ├── k8s-master/        # Master: kubeadm init, Weave CNI, Jenkins RBAC
+│   └── k8s-worker/        # Worker: containerd, kubelet, ready to join
+├── nagios/
+│   ├── nagios-server/     # Nagios Core from source, host/service auto-config
+│   └── nagios-client/     # NRPE client: system + K8s + Jenkins checks
 └── system/
-    ├── apt/           # APT package management with caching
-    └── package/       # Package installation automation
+    ├── apt/               # APT cache management & unattended upgrades
+    └── package/           # Essential system packages (curl, git, conntrack, etc.)
 ```
+
+> 📖 Each cookbook has its own detailed README inside `cookbooks/`.
 
 ---
 
@@ -25,20 +33,21 @@ cookbooks/
 ### On Your Workstation:
 
 ```bash
-# Install Chef Workstation
+# Install Chef Workstation (includes Berkshelf, knife, etc.)
 wget https://packages.chef.io/files/stable/chef-workstation/latest/ubuntu/22.04/chef-workstation_amd64.deb
 sudo dpkg -i chef-workstation_amd64.deb
 
 # Verify installation
 chef --version
 knife --version
+berks --version
 ```
 
-### On target nodes:
+### On Target Nodes:
 
 - Ubuntu 18.04+ or Debian 9+
 - SSH access with sudo privileges
-- Chef Infra Client will be installed automatically during bootstrap
+- Chef Infra Client installed (via `knife bootstrap` or manually)
 
 ### Optional: Chef Server Setup
 
@@ -52,54 +61,82 @@ knife --version
 
 ### Option 1: With Chef Server (Recommended)
 
+#### 1. Upload cookbooks using Berkshelf
+
 ```bash
-# 1. Upload cookbooks to Chef Server
-knife cookbook upload apt package -o cookbooks/system/
-knife cookbook upload k8s-master k8s-worker -o cookbooks/kubernetes/
+cd cookbooks/system/apt && berks install && berks upload && cd -
+cd cookbooks/system/package && berks install && berks upload && cd -
+cd cookbooks/kubernetes/k8s-master && berks install && berks upload && cd -
+cd cookbooks/kubernetes/k8s-worker && berks install && berks upload && cd -
+cd cookbooks/jenkins/jenkins-server && berks install && berks upload && cd -
+cd cookbooks/jenkins/jenkins-agent && berks install && berks upload && cd -
+cd cookbooks/nagios/nagios-server && berks install && berks upload && cd -
+cd cookbooks/nagios/nagios-client && berks install && berks upload && cd -
+```
 
-# 2. Bootstrap master node (installs Chef Client + applies cookbooks)
-knife bootstrap <MASTER_IP> --node-name k8s-master-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[k8s-master]' \
-  --ssh-user ubuntu --sudo
+> `berks install` resolves and downloads cookbook dependencies.  
+> `berks upload` uploads the cookbook and its dependencies to the Chef Server.
 
-# 3. Bootstrap worker nodes
-knife bootstrap <WORKER_IP> --node-name k8s-worker-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[k8s-worker]' \
-  --ssh-user ubuntu --sudo
+#### 2. Assign cookbooks to nodes
 
-# 4. Later, to apply updates
-knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user ubuntu
+```bash
+# Kubernetes
+knife node run_list add <K8S_MASTER_NODE> 'recipe[apt],recipe[package],recipe[k8s-master]'
+knife node run_list add <K8S_WORKER_NODE> 'recipe[apt],recipe[package],recipe[k8s-worker]'
+
+# Jenkins
+knife node run_list add <JENKINS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[jenkins-server]'
+knife node run_list add <JENKINS_AGENT_NODE> 'recipe[apt],recipe[package],recipe[jenkins-agent]'
+
+# Nagios
+knife node run_list add <NAGIOS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[nagios-server]'
+knife node run_list add <NAGIOS_CLIENT_NODE> 'recipe[apt],recipe[package],recipe[nagios-client]'
+```
+
+#### 3. Apply on target nodes
+
+```bash
+sudo chef-client
+```
+
+Or run remotely from your workstation:
+
+```bash
+knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user <SSH_USER>
+knife ssh 'name:jenkins-*' 'sudo chef-client' --ssh-user <SSH_USER>
+knife ssh 'name:nagios-*' 'sudo chef-client' --ssh-user <SSH_USER>
 ```
 
 ### Option 2: Without Chef Server (Chef Zero/Local Mode)
 
 ```bash
 # 1. Copy cookbooks to target node
-scp -r cookbooks/ ubuntu@<NODE_IP>:/tmp/
+scp -r cookbooks/ <SSH_USER>@<NODE_IP>:/tmp/
 
 # 2. SSH into node
-ssh ubuntu@<NODE_IP>
+ssh <SSH_USER>@<NODE_IP>
 
 # 3. Install Chef Infra Client
 curl -L https://omnitruck.chef.io/install.sh | sudo bash
 
-# 4. Run chef-client locally (for master node)
+# 4. Run chef-client locally (example: master node)
 sudo chef-client -z \
   -o 'recipe[apt],recipe[package],recipe[k8s-master]' \
   --cookbook-path /tmp/cookbooks/system:/tmp/cookbooks/kubernetes
-
-# For worker node, use: -o 'recipe[apt],recipe[package],recipe[k8s-worker]'
 ```
 
 ---
 
 ## 🔧 Tech Stack
 
-- **Config Management**: Chef Infra
-- **Container Runtime**: containerd  
-- **K8s Bootstrap**: kubeadm
-- **Networking**: Flannel CNI
-- **OS Support**: Ubuntu 18.04+, Debian 9+
+| Category | Technologies |
+|----------|-------------|
+| **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
+| **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
+| **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
+| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0 (compiled from source) |
+| **Security** | Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
+| **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
 
 ---
 
@@ -110,17 +147,17 @@ sudo chef-client -z \
 knife cookbook list
 ```
 
-**See node's current run-list:**
+**See a node's current run-list:**
 ```bash
-knife node show k8s-master-01 -a run_list
+knife node show <NODE> -a run_list
 ```
 
-**Update a node's run-list:**
+**Add recipes to a node's run-list:**
 ```bash
-knife node run_list set k8s-worker-01 'recipe[apt],recipe[k8s-worker]'
+knife node run_list add <NODE> 'recipe[apt],recipe[package],recipe[jenkins-agent]'
 ```
 
-**Verify cluster after setup:**
+**Verify Kubernetes cluster after setup:**
 ```bash
 kubectl get nodes
 ```
@@ -135,5 +172,3 @@ kubectl get nodes
 🐙 [GitHub](https://github.com/abhisran)
 
 ---
-
-*This is a cookbooks-only repo. For a full Chef repository structure with roles, environments, and data bags, check out the [Chef Repo documentation](https://docs.chef.io/chef_repo/).*

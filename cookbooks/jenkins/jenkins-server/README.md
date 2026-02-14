@@ -36,11 +36,11 @@ jq -n \
   '{"id":"ssh_keys","private_key":$priv,"public_key":$pub}' > jenkins_ssh_keys.json
 
 # Create the vault (grant access to server + agent nodes)
-# Replace YOUR_USERNAME with your Chef Server username (check: knife user list)
+# Replace <CHEF_USERNAME> with your Chef Server username (check: knife user list)
 knife vault create jenkins_credentials ssh_keys \
   --json jenkins_ssh_keys.json \
   --search 'recipe:jenkins-server OR recipe:jenkins-agent' \
-  --admins 'YOUR_USERNAME'
+  --admins '<CHEF_USERNAME>'
 
 # Clean up local files
 rm -f jenkins_ssh_key jenkins_ssh_key.pub jenkins_ssh_keys.json
@@ -92,7 +92,7 @@ knife vault refresh jenkins_credentials ssh_keys \
 | `node['jenkins']['plugins']` | List of plugins to install | See below |
 | `node['jenkins']['casc']['enabled']` | Enable JCasC auto-configuration | `true` |
 | `node['jenkins']['casc']['config_path']` | Path to the JCasC YAML file | `/var/lib/jenkins/jenkins.yaml` |
-| `node['jenkins']['casc']['jenkins_url']` | Jenkins URL for notifications/webhooks | `http://192.168.1.56:8080/` |
+| `node['jenkins']['casc']['jenkins_url']` | Jenkins URL for notifications/webhooks — **override with your server's IP** | `http://192.168.1.56:8080/` |
 | `node['jenkins']['casc']['controller_executors']` | Number of executors on the controller (0 = agents only) | `0` |
 | `node['jenkins']['agents']` | List of agent node definitions | See below |
 
@@ -145,7 +145,15 @@ Enables and starts the Jenkins service.
 
 ## Usage
 
-Add the cookbook to your node's run list:
+### Install & Upload
+
+```bash
+cd jenkins/jenkins-server
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[jenkins-server]'
@@ -158,13 +166,13 @@ Agent nodes are automatically registered via Configuration as Code. The cookbook
 2. Configures SSH credentials in Jenkins using JCasC
 3. Registers each agent defined in `node['jenkins']['agents']` as a permanent SSH node
 
-Default agent configuration:
+Agent configuration example (override the IP with your agent's address):
 
 ```ruby
 default['jenkins']['agents'] = [
   {
     'name' => 'agent-01',
-    'host' => '192.168.1.57',
+    'host' => '<AGENT_IP>',         # replace with your agent's IP
     'label' => 'linux docker',
     'executors' => 2,
     'work_dir' => '/var/lib/jenkins/agent',
@@ -182,8 +190,8 @@ To add more agents, override the attribute in a role or environment:
 default_attributes(
   'jenkins' => {
     'agents' => [
-      { 'name' => 'agent-01', 'host' => '192.168.1.57', 'label' => 'linux docker', 'executors' => 2, 'work_dir' => '/var/lib/jenkins/agent', 'java_path' => '/usr/bin/java', 'description' => 'Build agent 01' },
-      { 'name' => 'agent-02', 'host' => '192.168.1.58', 'label' => 'linux docker', 'executors' => 4, 'work_dir' => '/var/lib/jenkins/agent', 'java_path' => '/usr/bin/java', 'description' => 'Build agent 02' },
+      { 'name' => 'agent-01', 'host' => '<AGENT_01_IP>', 'label' => 'linux docker', 'executors' => 2, 'work_dir' => '/var/lib/jenkins/agent', 'java_path' => '/usr/bin/java', 'description' => 'Build agent 01' },
+      { 'name' => 'agent-02', 'host' => '<AGENT_02_IP>', 'label' => 'linux docker', 'executors' => 4, 'work_dir' => '/var/lib/jenkins/agent', 'java_path' => '/usr/bin/java', 'description' => 'Build agent 02' },
     ]
   }
 )

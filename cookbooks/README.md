@@ -1,123 +1,166 @@
-# 🍳 Chef Cookbooks Collection
+# 🍳 Chef Cookbooks — Homelab Infrastructure as Code
 
-Infrastructure automation cookbooks for Kubernetes clusters, Jenkins CI/CD, Nagios monitoring, and system configuration.
+A collection of **8 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
+
+> **📌 Project Evolution:** This project started as a single Kubernetes cookbook for automating cluster provisioning. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), and system configuration — demonstrating how incremental automation compounds into a fully managed environment.
 
 ---
 
-## 📁 Structure
+## ✨ Key Features
+
+- **Kubernetes 1.32** cluster provisioning (master + workers) with containerd, Weave CNI, and CI/CD RBAC
+- **Jenkins CI/CD** server with Configuration as Code (JCasC), 30+ plugins, and SSH-based agents with Docker & kubectl
+- **Nagios Core** compiled from source with **30+ monitoring checks** across system, Kubernetes, and Jenkins
+- **Chef Vault** integration for secrets management (SSH keys, kubeconfig) — no plaintext credentials
+- **Fully idempotent** — every cookbook can be re-applied safely via `chef-client`
+- **Attribute-driven** — all configurations are customizable through Chef roles/environments; no hardcoded values
+
+---
+
+## 🏗️ Infrastructure Architecture
+
+```
+                          ┌─────────────────────┐
+                          │    Chef Server       │
+                          └──────────┬──────────┘
+                   cookbooks + vault │
+          ┌──────────────┬───────────┼───────────┬──────────────┐
+          ▼              ▼           ▼           ▼              ▼
+  ┌──────────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+  │  K8s Master  │ │ K8s       │ │ K8s       │ │  Jenkins  │ │  Jenkins  │
+  │              │ │ Worker #1 │ │ Worker #2 │ │  Server   │ │  Agent    │
+  │              │ │           │ │           │ │           │ │           │
+  │ kubeadm      │ │ kubelet   │ │ kubelet   │ │ JCasC     │ │ Docker CE │
+  │ etcd         │ │ containerd│ │ containerd│ │ 30+ plugs │ │ kubectl   │
+  │ Weave CNI    │ │ kube-proxy│ │ kube-proxy│ │ Vault SSH │ │ kubeconfig│
+  │ RBAC         │ └───────────┘ └───────────┘ └───────────┘ └───────────┘
+  └──────────────┘
+          ▲              ▲           ▲           ▲              ▲
+          └──────────────┴───────────┼───────────┴──────────────┘
+                                     │
+                          ┌──────────┴──────────┐
+                          │   Nagios Server      │
+                          │   NRPE → 30+ checks  │
+                          └─────────────────────┘
+```
+
+> All IPs, hostnames, and credentials are **configurable via Chef attributes** — override them in a role or environment to match your network.
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
+| **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
+| **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
+| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0 (compiled from source) |
+| **Security** | Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
+| **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
+
+---
+
+## 📁 Cookbook Structure
 
 ```
 ├── jenkins/
-│   ├── jenkins-server/  → Jenkins controller (install, plugins, JCasC, SSH credentials)
-│   └── jenkins-agent/   → Jenkins SSH agent (Docker, kubectl, vault-managed keys)
+│   ├── jenkins-server/  → Controller: JCasC, 30+ plugins, Vault SSH credentials
+│   └── jenkins-agent/   → Agent: Docker CE, kubectl, kubeconfig from Vault
 ├── kubernetes/
-│   ├── k8s-master/      → Master node setup (containerd, kubeadm, kubelet, Weave CNI, RBAC)
-│   └── k8s-worker/      → Worker node setup (containerd, kubeadm, kubelet)
+│   ├── k8s-master/      → Master: kubeadm init, Weave CNI, Jenkins RBAC
+│   └── k8s-worker/      → Worker: containerd, kubelet, ready to join
 ├── nagios/
-│   ├── nagios-server/   → Nagios Core server (compile from source, host/service config)
-│   └── nagios-client/   → NRPE client (system, K8s, and Jenkins checks)
+│   ├── nagios-server/   → Nagios Core from source, host/service auto-config
+│   └── nagios-client/   → NRPE client: system + K8s + Jenkins checks
 └── system/
-    ├── apt/             → APT package management & caching
-    └── package/         → General package installation
+    ├── apt/             → APT cache management & unattended upgrades
+    └── package/         → Essential system packages (curl, git, conntrack, etc.)
 ```
+
+> 📖 Each cookbook has its own detailed README — see links in the [Cookbooks](#-cookbooks) section below.
+
+---
+
+## 📦 Cookbooks
+
+### [jenkins-server](jenkins/jenkins-server/)
+Installs Jenkins with OpenJDK 21, deploys 30+ plugins via the official plugin manager CLI, and configures the server entirely through **Jenkins Configuration as Code (JCasC)**. Agent nodes are auto-registered via SSH using credentials stored in **Chef Vault** — zero manual setup in the Jenkins UI.
+
+### [jenkins-agent](jenkins/jenkins-agent/)
+Prepares SSH-based build agents with **Docker CE** (docker build/push from pipelines), **kubectl** with a vault-managed kubeconfig (deploy to staging/production contexts), and all required build tools.
+
+### [k8s-master](kubernetes/k8s-master/)
+Bootstraps the Kubernetes control plane with `kubeadm init`, installs the **Weave** network plugin, and creates **RBAC resources** for Jenkins CI/CD — a `jenkins-deployer` ServiceAccount with namespace-scoped Roles in `staging` and `production`.
+
+### [k8s-worker](kubernetes/k8s-worker/)
+Installs **containerd** (with SystemdCgroup), kubeadm, and kubelet. Prepares the node to join the cluster via `kubeadm join`.
+
+### [nagios-server](nagios/nagios-server/)
+Compiles **Nagios Core 4.5.11** from source with the NRPE plugin. Auto-generates host, hostgroup, and service configurations from node attributes — adding a new monitored host is a single attribute override.
+
+### [nagios-client](nagios/nagios-client/)
+Installs the NRPE daemon and deploys **30+ check commands** covering system health, Kubernetes components (process + health endpoint checks), and Jenkins infrastructure.
+
+### [apt](system/apt/) · [package](system/package/)
+System-level cookbooks for APT cache management and essential package installation.
+
+---
+
+## 📊 Monitoring Overview
+
+Nagios monitors every node with checks organized by hostgroup:
+
+| Hostgroup | Checks |
+|-----------|--------|
+| **All Servers** | Disk, Memory, Load, Processes, Zombies, SSH, Users |
+| **K8s Cluster** | Kubelet, Containerd, Kube-Proxy (process + health), CoreDNS, Containerd Socket |
+| **K8s Masters** | API Server, etcd, Scheduler, Controller Manager (process + `/healthz` endpoints) |
+| **Jenkins Server** | Jenkins Process, Web UI (HTTP 200), Swap |
+| **Jenkins Agent** | Jenkins User, Work Directory, Swap |
+| **Infrastructure** | HTTP, Swap |
 
 ---
 
 ## ⚡ Quick Start
 
-### 1️⃣ Upload cookbooks to Chef Server
-```bash
-knife cookbook upload apt package -o system/
-knife cookbook upload k8s-master k8s-worker -o kubernetes/
-knife cookbook upload jenkins-server jenkins-agent -o jenkins/
-knife cookbook upload nagios-server nagios-client -o nagios/
-```
-
-### 2️⃣ Bootstrap nodes
-```bash
-# Kubernetes master node
-knife bootstrap <MASTER_IP> --node-name k8s-master-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[k8s-master]' --ssh-user ubuntu --sudo
-
-# Kubernetes worker node
-knife bootstrap <WORKER_IP> --node-name k8s-worker-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[k8s-worker]' --ssh-user ubuntu --sudo
-
-# Jenkins server
-knife bootstrap <JENKINS_IP> --node-name jenkins-server-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[jenkins-server]' --ssh-user ubuntu --sudo
-
-# Jenkins agent
-knife bootstrap <AGENT_IP> --node-name jenkins-agent-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[jenkins-agent]' --ssh-user ubuntu --sudo
-
-# Nagios server
-knife bootstrap <NAGIOS_IP> --node-name nagios-server-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[nagios-server]' --ssh-user ubuntu --sudo
-
-# Nagios client (on any monitored node)
-knife bootstrap <NODE_IP> --node-name monitored-node-01 \
-  --run-list 'recipe[apt],recipe[package],recipe[nagios-client]' --ssh-user ubuntu --sudo
-```
-
-### 3️⃣ Apply updates (when needed)
-```bash
-knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user ubuntu
-knife ssh 'name:jenkins-*' 'sudo chef-client' --ssh-user ubuntu
-knife ssh 'name:nagios-*' 'sudo chef-client' --ssh-user ubuntu
-```
+For the full setup workflow — uploading cookbooks with Berkshelf, bootstrapping nodes, and applying updates — see the [main README](../README.md#-usage).
 
 ---
 
-## 🖥️ How Chef Works
+## 🔧 Customization
 
-```
- WORKSTATION              CHEF SERVER              TARGET NODES
-┌───────────┐            ┌───────────┐            ┌───────────┐
-│ cookbooks │  upload    │  stores   │   pull    │  k8s-master│
-│ knife     │ ─────────► │ cookbooks │ ◄──────── │  k8s-worker│
-└───────────┘            │ run lists │            │  jenkins   │
-                         └───────────┘            │  nagios    │
-                                                  └───────────┘
-```
+All cookbooks are **attribute-driven** — no source code changes are needed to adapt them to your environment. Override attributes in a Chef role, environment, or wrapper cookbook.
 
-| Run On | Commands |
-|--------|----------|
-| 🖥️ Workstation | `knife cookbook upload`, `knife bootstrap`, `knife node run_list` |
-| 🎯 Target Nodes | `chef-client` |
-
-> **💡 Run lists** (which cookbook runs on which node) are configured on **Chef Server**, not in cookbooks.
-
----
-
-## 📋 Assigning Cookbooks to Nodes
-
-| Node Type | Cookbooks | Command |
-|-----------|-----------|--------|
-| **K8s Master** | apt, package, k8s-master | `knife node run_list set k8s-master-01 'recipe[apt],recipe[package],recipe[k8s-master]'` |
-| **K8s Worker** | apt, package, k8s-worker | `knife node run_list set k8s-worker-01 'recipe[apt],recipe[package],recipe[k8s-worker]'` |
-| **Jenkins Server** | apt, package, jenkins-server | `knife node run_list set jenkins-server-01 'recipe[apt],recipe[package],recipe[jenkins-server]'` |
-| **Jenkins Agent** | apt, package, jenkins-agent | `knife node run_list set jenkins-agent-01 'recipe[apt],recipe[package],recipe[jenkins-agent]'` |
-| **Nagios Server** | apt, package, nagios-server | `knife node run_list set nagios-server-01 'recipe[apt],recipe[package],recipe[nagios-server]'` |
-| **Monitored Node** | apt, package, nagios-client | `knife node run_list set node-01 'recipe[apt],recipe[package],recipe[nagios-client]'` |
-| **Any Node** | apt, package | `knife node run_list set node-01 'recipe[apt],recipe[package]'` |
-
----
-
-## 🛠️ Without Chef Server (Chef Solo)
-
-```bash
-# On target node directly
-sudo chef-solo -c solo.rb -j node.json
-```
-
-<details>
-<summary>See solo.rb example</summary>
+Common overrides:
 
 ```ruby
-cookbook_path ["/path/to/kubernetes", "/path/to/system", "/path/to/jenkins", "/path/to/nagios"]
+# Example Chef role (my_infra.rb)
+name 'my_infra'
+default_attributes(
+  'jenkins' => {
+    'casc' => { 'jenkins_url' => 'http://jenkins.example.com:8080/' },
+    'agents' => [
+      { 'name' => 'agent-01', 'host' => '10.0.0.20', 'label' => 'linux docker',
+        'executors' => 2, 'work_dir' => '/var/lib/jenkins/agent',
+        'java_path' => '/usr/bin/java', 'description' => 'Build agent 01' }
+    ]
+  },
+  'nagios' => {
+    'server' => { 'ip' => '10.0.0.30' },
+    'admin_password' => 'your_secure_password',
+    'monitored_hosts' => [
+      { 'host_name' => 'web-01', 'alias' => 'Web Server',
+        'address' => '10.0.0.40', 'hostgroups' => %w(monitored-servers infrastructure-servers) }
+    ]
+  },
+  'kubernetes' => {
+    'version' => '1.32'
+  }
+)
 ```
-</details>
+
+See each cookbook's README for the full list of configurable attributes.
 
 ---
 
@@ -126,11 +169,5 @@ cookbook_path ["/path/to/kubernetes", "/path/to/system", "/path/to/jenkins", "/p
 - Chef Workstation on your machine
 - Chef Infra Client >= 16.0 on nodes
 - Ubuntu 18.04+ / Debian 9+
-
----
-
-## 👤 Author
-
-**Abhishek Ranjan** • abhisran6@gmail.com
 
 ---

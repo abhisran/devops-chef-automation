@@ -85,7 +85,15 @@ Enables and starts both the Nagios service and the web server (Apache on Debian,
 
 ## Usage
 
-Add the cookbook to your node's run list:
+### Install & Upload
+
+```bash
+cd nagios/nagios-server
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[nagios-server]'
@@ -114,7 +122,7 @@ default_attributes(
       {
         'host_name' => 'web-server-01',
         'alias' => 'Web Server 1',
-        'address' => '192.168.1.60',
+        'address' => '<HOST_IP>',
         'hostgroups' => %w(monitored-servers infrastructure-servers)
       }
     ]

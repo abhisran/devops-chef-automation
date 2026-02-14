@@ -86,7 +86,15 @@ Jenkins **cannot** access `kube-system`, `default`, or any other namespace not l
 
 ## Usage
 
-Add the cookbook to your node's run list:
+### Install & Upload
+
+```bash
+cd kubernetes/k8s-master
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+Then add the cookbook to your node's run list:
 
 ```ruby
 run_list 'recipe[k8s-master]'
