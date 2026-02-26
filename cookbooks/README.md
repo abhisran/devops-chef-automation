@@ -1,6 +1,6 @@
 # 🍳 Chef Cookbooks — Homelab Infrastructure as Code
 
-A collection of **8 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
+A collection of **11 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
 
 > **📌 Project Evolution:** This project started as a single Kubernetes cookbook for automating cluster provisioning. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), and system configuration — demonstrating how incremental automation compounds into a fully managed environment.
 
@@ -11,6 +11,8 @@ A collection of **8 Chef cookbooks** that fully automate the provisioning, confi
 - **Kubernetes 1.32** cluster provisioning (master + workers) with containerd, Weave CNI, and CI/CD RBAC
 - **Jenkins CI/CD** server with Configuration as Code (JCasC), 30+ plugins, and SSH-based agents with Docker & kubectl
 - **Nagios Core** compiled from source with **30+ monitoring checks** across system, Kubernetes, and Jenkins
+- **Prometheus** time-series monitoring with Node Exporter on all nodes and configurable alert rules
+- **UFW firewall** on every node with role-based port rules, source restrictions, and K8s-aware forwarding
 - **Chef Vault** integration for secrets management (SSH keys, kubeconfig) — no plaintext credentials
 - **Fully idempotent** — every cookbook can be re-applied safely via `chef-client`
 - **Attribute-driven** — all configurations are customizable through Chef roles/environments; no hardcoded values
@@ -42,6 +44,10 @@ A collection of **8 Chef cookbooks** that fully automate the provisioning, confi
                           │   Nagios Server      │
                           │   NRPE → 30+ checks  │
                           └─────────────────────┘
+                          ┌──────────┬──────────┐
+                          │  Prometheus Server   │
+                          │  ← node_exporter     │
+                          └─────────────────────┘
 ```
 
 > All IPs, hostnames, and credentials are **configurable via Chef attributes** — override them in a role or environment to match your network.
@@ -55,8 +61,8 @@ A collection of **8 Chef cookbooks** that fully automate the provisioning, confi
 | **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
 | **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
-| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0 (compiled from source) |
-| **Security** | Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
+| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
+| **Security** | UFW firewall (role-based), Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
 | **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
 
 ---
@@ -73,8 +79,12 @@ A collection of **8 Chef cookbooks** that fully automate the provisioning, confi
 ├── nagios/
 │   ├── nagios-server/   → Nagios Core from source, host/service auto-config
 │   └── nagios-client/   → NRPE client: system + K8s + Jenkins checks
+├── prometheus/
+│   ├── prometheus-server/ → Prometheus server: scrape configs, alert rules, TSDB
+│   └── prometheus-client/ → Node Exporter: system metrics for all nodes
 └── system/
     ├── apt/             → APT cache management & unattended upgrades
+    ├── firewall/        → UFW firewall: role-based port rules, K8s forwarding
     └── package/         → Essential system packages (curl, git, conntrack, etc.)
 ```
 
@@ -101,6 +111,15 @@ Compiles **Nagios Core 4.5.11** from source with the NRPE plugin. Auto-generates
 
 ### [nagios-client](nagios/nagios-client/)
 Installs the NRPE daemon and deploys **30+ check commands** covering system health, Kubernetes components (process + health endpoint checks), and Jenkins infrastructure.
+
+### [prometheus-server](prometheus/prometheus-server/)
+Installs **Prometheus 2.53.3** from official releases with attribute-driven scrape configs, alert rules (InstanceDown, HighCPU, HighMemory, DiskSpaceLow), and optional Alertmanager integration. Configuration is validated with `promtool` on every change.
+
+### [prometheus-client](prometheus/prometheus-client/)
+Installs **Node Exporter 1.8.2** on all monitored nodes, exposing system metrics (CPU, memory, disk, network) for Prometheus scraping. Includes textfile and systemd collectors by default.
+
+### [firewall](system/firewall/)
+Installs **UFW** on every node with attribute-driven rule groups per role. Default deny incoming with per-service port allowlists, source-restricted monitoring ports (NRPE, Node Exporter), and automatic IP forwarding + FORWARD policy for Kubernetes nodes.
 
 ### [apt](system/apt/) · [package](system/package/)
 System-level cookbooks for APT cache management and essential package installation.

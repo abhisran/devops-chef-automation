@@ -1,0 +1,32 @@
+[Unit]
+Description=Prometheus Monitoring System
+Documentation=https://prometheus.io/docs/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=<%= @user %>
+Group=<%= @group %>
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=<%= @install_dir %>/prometheus \
+  --config.file=<%= @config_dir %>/prometheus.yml \
+  --storage.tsdb.path=<%= @data_dir %> \
+  --storage.tsdb.retention.time=<%= @retention_time %> \
+<% if @retention_size != '0' -%>
+  --storage.tsdb.retention.size=<%= @retention_size %> \
+<% end -%>
+  --web.listen-address=<%= @listen_address %>:<%= @port %> \
+  --web.console.templates=<%= @config_dir %>/consoles \
+  --web.console.libraries=<%= @config_dir %>/console_libraries \
+  --web.enable-lifecycle
+
+SyslogIdentifier=prometheus
+Restart=always
+RestartSec=5
+
+LimitNOFILE=65536
+LimitNPROC=65536
+
+[Install]
+WantedBy=multi-user.target

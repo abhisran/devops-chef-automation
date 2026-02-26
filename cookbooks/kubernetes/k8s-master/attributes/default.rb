@@ -34,3 +34,17 @@ default['kubernetes']['rbac']['jenkins']['enabled'] = true
 default['kubernetes']['rbac']['jenkins']['service_account'] = 'jenkins-deployer'
 default['kubernetes']['rbac']['jenkins']['namespace'] = 'ci-cd'
 default['kubernetes']['rbac']['jenkins']['deploy_namespaces'] = %w(staging production)
+
+# etcd backup
+default['kubernetes']['etcd_backup']['enabled'] = true
+default['kubernetes']['etcd_backup']['backup_dir'] = '/var/backups/etcd'
+default['kubernetes']['etcd_backup']['script_path'] = '/usr/local/bin/etcd-backup.sh'
+default['kubernetes']['etcd_backup']['etcdctl_version'] = '3.5.27'
+default['kubernetes']['etcd_backup']['retention_days'] = 7
+default['kubernetes']['etcd_backup']['etcd_endpoints'] = 'https://127.0.0.1:2379'
+default['kubernetes']['etcd_backup']['cert_dir'] = '/etc/kubernetes/pki/etcd'
+default['kubernetes']['etcd_backup']['remote']['enabled'] = true
+default['kubernetes']['etcd_backup']['remote']['user'] = 'backup'
+default['kubernetes']['etcd_backup']['remote']['host'] = '192.168.1.50'
+default['kubernetes']['etcd_backup']['remote']['path'] = '/backups/etcd'
+default['kubernetes']['etcd_backup']['remote']['retention_days'] = 7
