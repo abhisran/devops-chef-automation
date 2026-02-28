@@ -7,6 +7,7 @@ Chef cookbook to configure a Kubernetes master node with:
 - Kubernetes master initialization
 - Weave CNI plugin
 - Jenkins CI/CD RBAC (ServiceAccount + namespace-scoped Roles)
+- etcd snapshot backup with local + remote retention
 
 ## Requirements
 
@@ -30,6 +31,18 @@ Chef cookbook to configure a Kubernetes master node with:
 | `node['kubernetes']['rbac']['jenkins']['service_account']` | ServiceAccount name for Jenkins | `jenkins-deployer` |
 | `node['kubernetes']['rbac']['jenkins']['namespace']` | Namespace for the ServiceAccount | `ci-cd` |
 | `node['kubernetes']['rbac']['jenkins']['deploy_namespaces']` | Namespaces Jenkins can deploy to | `staging production` |
+| `node['kubernetes']['etcd_backup']['enabled']` | Enable etcd backup script deployment | `true` |
+| `node['kubernetes']['etcd_backup']['backup_dir']` | Local backup directory | `/var/backups/etcd` |
+| `node['kubernetes']['etcd_backup']['script_path']` | Path to the backup script | `/usr/local/bin/etcd-backup.sh` |
+| `node['kubernetes']['etcd_backup']['etcdctl_version']` | etcdctl version to install | `3.5.27` |
+| `node['kubernetes']['etcd_backup']['retention_days']` | Days to keep local backups | `7` |
+| `node['kubernetes']['etcd_backup']['etcd_endpoints']` | etcd endpoint URL | `https://127.0.0.1:2379` |
+| `node['kubernetes']['etcd_backup']['cert_dir']` | etcd PKI certificate directory | `/etc/kubernetes/pki/etcd` |
+| `node['kubernetes']['etcd_backup']['remote']['enabled']` | Enable remote copy via SCP | `true` |
+| `node['kubernetes']['etcd_backup']['remote']['user']` | SSH user for remote host | `backup` |
+| `node['kubernetes']['etcd_backup']['remote']['host']` | Remote backup host | `192.168.1.50` |
+| `node['kubernetes']['etcd_backup']['remote']['path']` | Remote backup directory | `/backups/etcd` |
+| `node['kubernetes']['etcd_backup']['remote']['retention_days']` | Days to keep remote backups | `7` |
 
 ## Recipes
 
@@ -48,6 +61,23 @@ Disables swap, adds the Kubernetes apt repository, and installs kubeadm, kubelet
 ### master
 
 Pulls required images, initializes the Kubernetes master with `kubeadm init`, configures kubectl for the root user, and installs the Weave network plugin.
+
+### etcd_backup
+
+Installs `etcdctl` and deploys an etcd snapshot backup script on the master node. The `etcdctl` binary is downloaded from the official etcd releases (not included on the host by default in kubeadm clusters). The script:
+
+1. Takes an etcd snapshot using `etcdctl snapshot save` with the cluster's PKI certificates
+2. Saves the snapshot to the local backup directory with a timestamp
+3. Verifies snapshot integrity with `etcdctl snapshot status`
+4. Rotates local backups older than the configured retention period
+5. Copies the snapshot to a remote host via SCP (if enabled)
+6. Rotates remote backups older than the configured retention period
+
+The script supports a `--verify` flag to check the latest backup without taking a new one.
+
+Can be disabled by setting `node['kubernetes']['etcd_backup']['enabled']` to `false`.
+
+**Designed to be triggered by a Jenkins pipeline** — see the `Jenkins-Pipelines/etcd-backup/` repo for the Jenkinsfile that runs this script daily via cron.
 
 ### rbac
 
@@ -126,6 +156,44 @@ default_attributes(
     }
   }
 )
+```
+
+### etcd Backup Configuration
+
+Customize the remote backup destination:
+
+```ruby
+default_attributes(
+  'kubernetes' => {
+    'etcd_backup' => {
+      'retention_days' => 14,
+      'remote' => {
+        'user' => 'backup',
+        'host' => '192.168.1.50',
+        'path' => '/backups/etcd'
+      }
+    }
+  }
+)
+```
+
+To disable etcd backup:
+
+```ruby
+default_attributes(
+  'kubernetes' => {
+    'etcd_backup' => {
+      'enabled' => false
+    }
+  }
+)
+```
+
+To run the backup manually on the master node:
+
+```bash
+sudo /usr/local/bin/etcd-backup.sh          # take a backup
+sudo /usr/local/bin/etcd-backup.sh --verify  # verify the latest backup
 ```
 
 ## Author

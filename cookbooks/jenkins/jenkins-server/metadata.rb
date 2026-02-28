@@ -1,6 +1,6 @@
 name 'jenkins-server'
 maintainer 'Abhishek Ranjan'
-maintainer_email 'abhisran60@gmail.com'
+maintainer_email 'abhisran6@gmail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures Jenkins server (controller)'
 version '0.2.0'

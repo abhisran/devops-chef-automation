@@ -1,0 +1,25 @@
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://github.com/prometheus/node_exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=<%= @user %>
+Group=<%= @group %>
+ExecStart=<%= @install_dir %>/node_exporter \
+  --web.listen-address=<%= @listen_address %>:<%= @port %> \
+  --collector.textfile.directory=<%= @textfile_dir %><% @enabled_collectors.each do |collector| %> \
+  --collector.<%= collector %><% end %><% @disabled_collectors.each do |collector| %> \
+  --no-collector.<%= collector %><% end %><% @extra_flags.each do |flag, value| %> \
+  <%= flag %>=<%= value %><% end %>
+
+SyslogIdentifier=node_exporter
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+
