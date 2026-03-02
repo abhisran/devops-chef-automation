@@ -17,7 +17,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-KEY_DIR="${SCRIPT_DIR}/../keys"
+KEY_DIR="${HOME}/.chef"
 ADMIN_USER="aranjan"
 
 # All client nodes that need vault access
@@ -35,7 +35,6 @@ echo ""
 # 1. Generate Jenkins SSH key pair
 # -----------------------------------------------
 echo "[1/4] Generating Jenkins SSH key pair..."
-mkdir -p "${KEY_DIR}"
 
 if [ ! -f "${KEY_DIR}/jenkins_agent_key" ]; then
   ssh-keygen -t ed25519 -f "${KEY_DIR}/jenkins_agent_key" -N "" -C "jenkins-agent-ssh-key"
@@ -43,9 +42,6 @@ if [ ! -f "${KEY_DIR}/jenkins_agent_key" ]; then
 else
   echo "  ⊘ SSH key pair already exists at ${KEY_DIR}/jenkins_agent_key (skipping)"
 fi
-
-JENKINS_PRIVATE_KEY=$(cat "${KEY_DIR}/jenkins_agent_key")
-JENKINS_PUBLIC_KEY=$(cat "${KEY_DIR}/jenkins_agent_key.pub")
 
 # -----------------------------------------------
 # 2. Create Jenkins Credentials Vault
@@ -63,12 +59,11 @@ cat > "${TMPFILE}" <<EOF
 }
 EOF
 
+# Delete existing vault if present (handles broken/corrupt vaults from previous runs)
+knife vault delete jenkins_credentials ssh_keys -y 2>/dev/null || true
+knife data bag delete jenkins_credentials ssh_keys_keys -y 2>/dev/null || true
+
 knife vault create jenkins_credentials ssh_keys \
-  --json "${TMPFILE}" \
-  --search "name:${JENKINS_CLIENTS//,/ OR name:}" \
-  --admins "${ADMIN_USER}" \
-  2>/dev/null || \
-knife vault update jenkins_credentials ssh_keys \
   --json "${TMPFILE}" \
   --search "name:${JENKINS_CLIENTS//,/ OR name:}" \
   --admins "${ADMIN_USER}"
@@ -93,12 +88,10 @@ cat > "${TMPFILE}" <<EOF
 }
 EOF
 
+knife vault delete nagios_credentials admin_password -y 2>/dev/null || true
+knife data bag delete nagios_credentials admin_password_keys -y 2>/dev/null || true
+
 knife vault create nagios_credentials admin_password \
-  --json "${TMPFILE}" \
-  --search "name:${NAGIOS_SERVER_CLIENT}" \
-  --admins "${ADMIN_USER}" \
-  2>/dev/null || \
-knife vault update nagios_credentials admin_password \
   --json "${TMPFILE}" \
   --search "name:${NAGIOS_SERVER_CLIENT}" \
   --admins "${ADMIN_USER}"
@@ -136,12 +129,10 @@ cat > "${TMPFILE}" <<'EOF'
 }
 EOF
 
+knife vault delete app_versions default -y 2>/dev/null || true
+knife data bag delete app_versions default_keys -y 2>/dev/null || true
+
 knife vault create app_versions default \
-  --json "${TMPFILE}" \
-  --search "name:${ALL_CLIENTS//,/ OR name:}" \
-  --admins "${ADMIN_USER}" \
-  2>/dev/null || \
-knife vault update app_versions default \
   --json "${TMPFILE}" \
   --search "name:${ALL_CLIENTS//,/ OR name:}" \
   --admins "${ADMIN_USER}"
@@ -169,8 +160,8 @@ echo "  knife vault show nagios_credentials admin_password"
 echo "  knife vault show app_versions default"
 echo ""
 echo "SSH keys saved at:"
-echo "  Private: ${KEY_DIR}/jenkins_agent_key"
-echo "  Public:  ${KEY_DIR}/jenkins_agent_key.pub"
+echo "  Private: ~/.chef/jenkins_agent_key"
+echo "  Public:  ~/.chef/jenkins_agent_key.pub"
 echo ""
 echo "IMPORTANT: The vault search queries use node names."
 echo "Nodes must be bootstrapped (chef-client run) before they"
