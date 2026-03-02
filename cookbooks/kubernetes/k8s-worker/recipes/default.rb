@@ -10,12 +10,12 @@ Chef::Log.level = :info
 include_recipe 'chef-vault'
 
 begin
-  app_versions = node.run_state['app_versions'] || chef_vault_item('app_versions', 'default')
+  app_versions = node.run_state['app_versions'] || data_bag_item('app_versions', 'default')
   node.run_state['app_versions'] = app_versions
   node.default['kubernetes']['version'] = app_versions['kubernetes']['version'] if app_versions.dig('kubernetes', 'version')
   node.default['kubernetes']['cni_version'] = app_versions['kubernetes']['cni_version'] if app_versions.dig('kubernetes', 'cni_version')
 rescue => e
-  Chef::Log.warn("app_versions vault not available: #{e.message}. Using default attributes.")
+  Chef::Log.warn("app_versions data bag not available: #{e.message}. Using default attributes.")
 end
 
 include_recipe 'k8s-worker::containerd'

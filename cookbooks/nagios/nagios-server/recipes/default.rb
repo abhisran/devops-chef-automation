@@ -1,12 +1,12 @@
 include_recipe 'chef-vault'
 
 begin
-  app_versions = node.run_state['app_versions'] || chef_vault_item('app_versions', 'default')
+  app_versions = node.run_state['app_versions'] || data_bag_item('app_versions', 'default')
   node.run_state['app_versions'] = app_versions
   node.default['nagios']['version'] = app_versions['nagios']['version'] if app_versions.dig('nagios', 'version')
   node.default['nagios']['nrpe_version'] = app_versions['nagios']['nrpe_version'] if app_versions.dig('nagios', 'nrpe_version')
 rescue => e
-  Chef::Log.warn("app_versions vault not available: #{e.message}. Using default attributes.")
+  Chef::Log.warn("app_versions data bag not available: #{e.message}. Using default attributes.")
 end
 
 begin

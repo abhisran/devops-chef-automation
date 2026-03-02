@@ -20,8 +20,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEY_DIR="${HOME}/.chef"
 ADMIN_USER="aranjan"
 
-# All client nodes that need vault access
-ALL_CLIENTS="master-node,worker-node-1,worker-node-2,nagios-server,jenkins-server,jenkins-agent,prom-server,grafana-server"
 JENKINS_CLIENTS="jenkins-server,jenkins-agent"
 K8S_CLIENTS="master-node,worker-node-1,worker-node-2"
 NAGIOS_SERVER_CLIENT="nagios-server"
@@ -102,10 +100,10 @@ rm -f "${TMPFILE}"
 echo "  ✓ nagios_credentials/admin_password vault created"
 
 # -----------------------------------------------
-# 4. Create App Versions Vault
+# 4. Create App Versions Data Bag (non-sensitive, no encryption needed)
 # -----------------------------------------------
 echo ""
-echo "[4/4] Creating app_versions vault (centralized version management)..."
+echo "[4/4] Creating app_versions data bag (centralized version management)..."
 
 TMPFILE=$(mktemp)
 cat > "${TMPFILE}" <<'EOF'
@@ -131,17 +129,12 @@ cat > "${TMPFILE}" <<'EOF'
 }
 EOF
 
-knife vault delete app_versions default -y --mode client 2>/dev/null || true
 knife data bag delete app_versions -y 2>/dev/null || true
-
-knife vault create app_versions default \
-  --json "${TMPFILE}" \
-  --search "name:${ALL_CLIENTS//,/ OR name:}" \
-  --admins "${ADMIN_USER}" \
-  --mode client
+knife data bag create app_versions
+knife data bag from file app_versions "${TMPFILE}"
 
 rm -f "${TMPFILE}"
-echo "  ✓ app_versions/default vault created"
+echo "  ✓ app_versions/default data bag created"
 
 # -----------------------------------------------
 # Summary
@@ -152,15 +145,16 @@ echo "  Setup Complete!"
 echo "============================================"
 echo ""
 echo "Vaults created:"
-echo "  • jenkins_credentials/ssh_keys    → Jenkins server + agent"
-echo "  • nagios_credentials/admin_password → Nagios server"
-echo "  • app_versions/default            → All nodes"
+echo "  • jenkins_credentials/ssh_keys    → Jenkins server + agent (encrypted)"
+echo "  • nagios_credentials/admin_password → Nagios server (encrypted)"
+echo "Data bags created:"
+echo "  • app_versions/default            → All nodes (plain text)"
 echo ""
 echo "Verify with:"
 echo "  knife vault list"
 echo "  knife vault show jenkins_credentials ssh_keys --mode client"
 echo "  knife vault show nagios_credentials admin_password --mode client"
-echo "  knife vault show app_versions default --mode client"
+echo "  knife data bag show app_versions default"
 echo ""
 echo "SSH keys saved at:"
 echo "  Private: ~/.chef/jenkins_agent_key"
