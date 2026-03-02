@@ -16,7 +16,7 @@ end
 # Add Docker's official GPG key
 execute 'add-docker-gpg-key' do
   command <<-EOH
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     chmod a+r /etc/apt/keyrings/docker.gpg
   EOH
   creates '/etc/apt/keyrings/docker.gpg'
@@ -24,7 +24,7 @@ end
 
 # Add Docker repository
 file '/etc/apt/sources.list.d/docker.list' do
-  content 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable'
+  content "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu #{node['lsb']['codename']} stable\n"
   notifies :update, 'apt_update[update_apt_cache]', :immediately
 end
 

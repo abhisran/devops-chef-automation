@@ -28,7 +28,7 @@ default['firewall']['rule_groups']['nagios_client']['rules'] = {
     'port' => '5666',
     'protocol' => 'tcp',
     'action' => 'allow',
-    'source' => '192.168.1.55',
+    'source' => '192.168.1.74',
     'comment' => 'NRPE from Nagios server',
   },
 }
@@ -192,5 +192,16 @@ default['firewall']['rule_groups']['prometheus_server']['rules'] = {
     'protocol' => 'tcp',
     'action' => 'allow',
     'comment' => 'Prometheus UI/API',
+  },
+}
+
+# Grafana server
+default['firewall']['rule_groups']['grafana_server']['enabled'] = false
+default['firewall']['rule_groups']['grafana_server']['rules'] = {
+  'grafana' => {
+    'port' => '3000',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'Grafana UI',
   },
 }

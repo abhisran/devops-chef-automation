@@ -3,3 +3,5 @@ maintainer 'Abhishek Ranjan'
 version '1.0.4'
 chef_version '>= 16'
 description 'Installs and configures NRPE client for Nagios monitoring'
+
+depends 'firewall'

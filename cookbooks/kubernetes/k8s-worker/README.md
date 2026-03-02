@@ -20,7 +20,7 @@ Chef cookbook to configure a Kubernetes worker node with:
 
 | Attribute | Description | Default |
 |-----------|-------------|---------|
-| `node['kubernetes']['version']` | Kubernetes version | `1.32` |
+| `node['kubernetes']['version']` | Kubernetes version | `1.33` |
 | `node['kubernetes']['packages']` | K8s packages to install | `kubelet kubeadm kubectl` |
 | `node['kubernetes']['cni_version']` | CNI plugin version | `1.4.0` |
 
@@ -41,6 +41,26 @@ Disables swap, adds the Kubernetes apt repository, and installs kubeadm, kubelet
 ### worker
 
 Prepares the node for joining a Kubernetes cluster. After running `chef-client`, you must manually run the `kubeadm join` command provided by the master node to join the cluster.
+
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `kubernetes.version` | `node['kubernetes']['version']` |
+| `kubernetes.cni_version` | `node['kubernetes']['cni_version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"kubernetes":{"version":"1.33","cni_version":"1.4.0"}}' \
+  --search "role:k8s-worker" \
+  --admins "admin_user"
+```
 
 ## Usage
 

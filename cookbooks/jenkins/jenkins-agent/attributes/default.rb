@@ -22,4 +22,4 @@ default['jenkins']['agent']['docker']['packages'] = %w(
 
 # kubectl
 default['jenkins']['agent']['kubectl']['enabled'] = true
-default['jenkins']['agent']['kubectl']['k8s_version'] = '1.32'
+default['jenkins']['agent']['kubectl']['k8s_version'] = '1.33'

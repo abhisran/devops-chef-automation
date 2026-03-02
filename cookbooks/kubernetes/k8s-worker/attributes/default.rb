@@ -1,5 +1,5 @@
 # Kubernetes version
-default['kubernetes']['version'] = '1.32'
+default['kubernetes']['version'] = '1.33'
 default['kubernetes']['packages'] = %w(kubelet kubeadm kubectl)
 default['kubernetes']['cni_version'] = '1.4.0'
 
@@ -22,3 +22,6 @@ default['kubernetes']['cni'] = {
   'bin_dir' => '/opt/cni/bin',
   'conf_dir' => '/etc/cni/net.d',
 }
+
+# Firewall
+default['firewall']['rule_groups']['k8s_worker']['enabled'] = true

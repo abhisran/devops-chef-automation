@@ -9,8 +9,11 @@ default['nagios']['install_dir'] = '/usr/local/nagios'
 default['nagios']['src_dir'] = '/usr/local/src'
 
 default['nagios']['admin_user'] = 'nagiosadmin'
-# IMPORTANT: Override this password in your environment/role for production!
-default['nagios']['admin_password'] = 'nagios@123'
+default['nagios']['vault']['name'] = 'nagios_credentials'
+default['nagios']['vault']['item'] = 'admin_password'
+
+# Firewall
+default['firewall']['rule_groups']['nagios_server']['enabled'] = true
 
 # Hostgroup definitions
 # Note: 'linux-servers' is already defined in Nagios default config, so we use 'monitored-servers'
@@ -43,6 +46,10 @@ default['nagios']['hostgroups'] = [
     'name' => 'jenkins-agents',
     'alias' => 'Jenkins Agent Nodes',
   },
+  {
+    'name' => 'monitoring-servers',
+    'alias' => 'Monitoring Servers',
+  },
 ]
 
 # Monitored hosts configuration
@@ -50,38 +57,50 @@ default['nagios']['monitored_hosts'] = [
   {
     'host_name' => 'master-node',
     'alias' => 'K8s Master Node',
-    'address' => '192.168.1.51',
+    'address' => '192.168.1.71',
     'hostgroups' => %w(monitored-servers k8s-cluster k8s-masters),
   },
   {
     'host_name' => 'worker-node-1',
     'alias' => 'K8s Worker Node 1',
-    'address' => '192.168.1.52',
+    'address' => '192.168.1.72',
     'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
   },
   {
     'host_name' => 'worker-node-2',
     'alias' => 'K8s Worker Node 2',
-    'address' => '192.168.1.53',
+    'address' => '192.168.1.73',
     'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
   },
   {
     'host_name' => 'chef-server',
     'alias' => 'Chef Server',
-    'address' => '192.168.1.54',
+    'address' => '192.168.1.70',
     'hostgroups' => %w(monitored-servers infrastructure-servers),
   },
   {
     'host_name' => 'jenkins-server',
     'alias' => 'Jenkins Controller',
-    'address' => '192.168.1.56',
+    'address' => '192.168.1.75',
     'hostgroups' => %w(monitored-servers jenkins-servers),
   },
   {
-    'host_name' => 'jenkins-agent-01',
+    'host_name' => 'jenkins-agent',
     'alias' => 'Jenkins Agent 1',
-    'address' => '192.168.1.57',
+    'address' => '192.168.1.76',
     'hostgroups' => %w(monitored-servers jenkins-agents),
+  },
+  {
+    'host_name' => 'prom-server',
+    'alias' => 'Prometheus Server',
+    'address' => '192.168.1.77',
+    'hostgroups' => %w(monitored-servers monitoring-servers),
+  },
+  {
+    'host_name' => 'grafana-server',
+    'alias' => 'Grafana Server',
+    'address' => '192.168.1.78',
+    'hostgroups' => %w(monitored-servers monitoring-servers),
   },
 ]
 
@@ -140,6 +159,10 @@ default['nagios']['hostgroup_services'] = {
   'jenkins-servers' => [
     { 'description' => 'Jenkins Process', 'check_command' => 'check_nrpe!check_jenkins_process' },
     { 'description' => 'Jenkins Web UI', 'check_command' => 'check_nrpe!check_jenkins_http' },
+    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
+  # Monitoring server checks (Prometheus, Grafana, etc.)
+  'monitoring-servers' => [
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
   ],
   # Jenkins agent checks

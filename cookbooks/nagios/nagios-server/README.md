@@ -83,6 +83,26 @@ Registers both config files in `nagios.cfg` so Nagios loads them on startup.
 
 Enables and starts both the Nagios service and the web server (Apache on Debian, httpd on RHEL).
 
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `nagios.version` | `node['nagios']['version']` |
+| `nagios.nrpe_version` | `node['nagios']['nrpe_version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"nagios":{"version":"4.5.11","nrpe_version":"4.1.0"}}' \
+  --search "role:nagios-server" \
+  --admins "admin_user"
+```
+
 ## Usage
 
 ### Install & Upload

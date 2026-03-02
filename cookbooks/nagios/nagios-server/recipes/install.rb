@@ -147,7 +147,7 @@ end
 
 # Create htpasswd file for Nagios web UI authentication
 execute 'create_nagios_htpasswd' do
-  command "echo '#{node['nagios']['admin_password']}' | htpasswd -ci #{node['nagios']['install_dir']}/etc/htpasswd.users #{node['nagios']['admin_user']}"
+  command lazy { "echo '#{node.run_state['nagios_admin_password']}' | htpasswd -ci #{node['nagios']['install_dir']}/etc/htpasswd.users #{node['nagios']['admin_user']}" }
   creates "#{node['nagios']['install_dir']}/etc/htpasswd.users"
   sensitive true
 end

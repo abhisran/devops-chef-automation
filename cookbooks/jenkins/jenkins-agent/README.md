@@ -112,10 +112,32 @@ sudo -u jenkins kubectl --context=production get pods
 | `node['jenkins']['agent']['docker']['enabled']` | Install Docker CE | `true` |
 | `node['jenkins']['agent']['docker']['packages']` | Docker packages to install | `docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` |
 | `node['jenkins']['agent']['kubectl']['enabled']` | Install kubectl and deploy kubeconfig | `true` |
-| `node['jenkins']['agent']['kubectl']['k8s_version']` | Kubernetes version for kubectl | `1.32` |
+| `node['jenkins']['agent']['kubectl']['k8s_version']` | Kubernetes version for kubectl | `1.33` |
 | `node['jenkins']['vault']['name']` | Chef Vault name for credentials | `jenkins_credentials` |
 | `node['jenkins']['vault']['item']` | Chef Vault item for SSH keys | `ssh_keys` |
 | `node['jenkins']['vault']['kubeconfig_item']` | Chef Vault item for kubeconfig | `kubeconfig` |
+
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `jenkins.java_package` | `node['jenkins']['java_package']` |
+| `jenkins.kubectl_version` | `node['jenkins']['agent']['kubectl']['k8s_version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"jenkins":{"java_package":"openjdk-21-jre","kubectl_version":"1.33"}}' \
+  --search "recipe:jenkins-server OR recipe:jenkins-agent" \
+  --admins "admin_user"
+```
+
+If the vault already exists, use `knife vault update` instead.
 
 ## Usage
 

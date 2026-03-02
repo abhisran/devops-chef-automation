@@ -31,18 +31,23 @@ default['prometheus']['server']['scrape_configs'] = [
   {
     'job_name' => 'node_exporter',
     'targets' => [
-      '192.168.1.51:9100',
-      '192.168.1.52:9100',
-      '192.168.1.53:9100',
-      '192.168.1.54:9100',
-      '192.168.1.55:9100',
-      '192.168.1.56:9100',
-      '192.168.1.57:9100',
+      '192.168.1.70:9100',
+      '192.168.1.71:9100',
+      '192.168.1.72:9100',
+      '192.168.1.73:9100',
+      '192.168.1.74:9100',
+      '192.168.1.75:9100',
+      '192.168.1.76:9100',
+      '192.168.1.77:9100',
+      '192.168.1.78:9100',
     ],
     'metrics_path' => '/metrics',
     'scheme' => 'http',
   },
 ]
+
+# Firewall
+default['firewall']['rule_groups']['prometheus_server']['enabled'] = true
 
 # Alertmanager integration (disabled by default — enable when Alertmanager is deployed)
 default['prometheus']['server']['alertmanager']['enabled'] = false

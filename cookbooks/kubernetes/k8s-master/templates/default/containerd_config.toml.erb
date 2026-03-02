@@ -26,7 +26,7 @@ state = "/run/containerd"
     startup_delay = "100ms"
 
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "k8s.gcr.io/pause:3.5"
+    sandbox_image = "registry.k8s.io/pause:3.10"
     stats_collect_period = 10
     stream_server_address = "127.0.0.1"
     stream_server_port = "0"

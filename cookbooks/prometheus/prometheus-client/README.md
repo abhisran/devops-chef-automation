@@ -58,6 +58,25 @@ Ensures the textfile collector directory exists with correct permissions. Node E
 
 Deploys a systemd service unit for Node Exporter with all configured collectors and flags, then enables and starts the service.
 
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `prometheus.node_exporter_version` | `node['prometheus']['node_exporter']['version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"prometheus":{"node_exporter_version":"1.8.2"}}' \
+  --search "role:prometheus-client" \
+  --admins "admin_user"
+```
+
 ## Usage
 
 ### Install & Upload

@@ -104,6 +104,25 @@ Deploys the main `prometheus.yml` configuration from attributes, including globa
 
 Deploys a systemd service unit for Prometheus and enables/starts the service. Supports graceful reload via `SIGHUP` when configuration changes.
 
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `prometheus.server_version` | `node['prometheus']['server']['version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"prometheus":{"server_version":"2.53.3"}}' \
+  --search "role:prometheus-server" \
+  --admins "admin_user"
+```
+
 ## Usage
 
 ### Install & Upload

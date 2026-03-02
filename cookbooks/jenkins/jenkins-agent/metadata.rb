@@ -7,3 +7,4 @@ version '0.3.0'
 chef_version '>= 16.0'
 
 depends 'chef-vault', '~> 4.0'
+depends 'firewall'

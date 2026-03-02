@@ -5,3 +5,6 @@ license 'All Rights Reserved'
 description 'Installs/Configures Prometheus Node Exporter for system metrics collection'
 version '0.1.0'
 chef_version '>= 16'
+
+depends 'chef-vault', '~> 4.0'
+depends 'firewall'

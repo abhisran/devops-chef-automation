@@ -143,6 +143,28 @@ This recipe automatically:
 
 Enables and starts the Jenkins service.
 
+## Centralized Version Management
+
+This cookbook supports loading version attributes from the `app_versions` Chef Vault. If the vault exists, it overrides the default attribute values at compile time. If the vault is not available, the hardcoded defaults in `attributes/default.rb` are used.
+
+### Vault Keys
+
+| Vault Key | Overrides Attribute |
+|-----------|--------------------|
+| `jenkins.java_package` | `node['jenkins']['java_package']` |
+| `jenkins.plugin_manager_version` | `node['jenkins']['plugin_manager']['version']` |
+
+### Setup
+
+```bash
+knife vault create app_versions default \
+  '{"jenkins":{"java_package":"openjdk-21-jre","plugin_manager_version":"2.13.0"}}' \
+  --search "recipe:jenkins-server OR recipe:jenkins-agent" \
+  --admins "admin_user"
+```
+
+If the vault already exists, use `knife vault update` instead.
+
 ## Usage
 
 ### Install & Upload
