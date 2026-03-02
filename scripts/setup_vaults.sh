@@ -60,13 +60,14 @@ cat > "${TMPFILE}" <<EOF
 EOF
 
 # Delete existing vault if present (handles broken/corrupt vaults from previous runs)
-knife vault delete jenkins_credentials ssh_keys -y 2>/dev/null || true
-knife data bag delete jenkins_credentials ssh_keys_keys -y 2>/dev/null || true
+knife vault delete jenkins_credentials ssh_keys -y --mode client 2>/dev/null || true
+knife data bag delete jenkins_credentials -y 2>/dev/null || true
 
 knife vault create jenkins_credentials ssh_keys \
   --json "${TMPFILE}" \
   --search "name:${JENKINS_CLIENTS//,/ OR name:}" \
-  --admins "${ADMIN_USER}"
+  --admins "${ADMIN_USER}" \
+  --mode client
 
 rm -f "${TMPFILE}"
 echo "  ✓ jenkins_credentials/ssh_keys vault created"
@@ -88,13 +89,14 @@ cat > "${TMPFILE}" <<EOF
 }
 EOF
 
-knife vault delete nagios_credentials admin_password -y 2>/dev/null || true
-knife data bag delete nagios_credentials admin_password_keys -y 2>/dev/null || true
+knife vault delete nagios_credentials admin_password -y --mode client 2>/dev/null || true
+knife data bag delete nagios_credentials -y 2>/dev/null || true
 
 knife vault create nagios_credentials admin_password \
   --json "${TMPFILE}" \
   --search "name:${NAGIOS_SERVER_CLIENT}" \
-  --admins "${ADMIN_USER}"
+  --admins "${ADMIN_USER}" \
+  --mode client
 
 rm -f "${TMPFILE}"
 echo "  ✓ nagios_credentials/admin_password vault created"
@@ -129,13 +131,14 @@ cat > "${TMPFILE}" <<'EOF'
 }
 EOF
 
-knife vault delete app_versions default -y 2>/dev/null || true
-knife data bag delete app_versions default_keys -y 2>/dev/null || true
+knife vault delete app_versions default -y --mode client 2>/dev/null || true
+knife data bag delete app_versions -y 2>/dev/null || true
 
 knife vault create app_versions default \
   --json "${TMPFILE}" \
   --search "name:${ALL_CLIENTS//,/ OR name:}" \
-  --admins "${ADMIN_USER}"
+  --admins "${ADMIN_USER}" \
+  --mode client
 
 rm -f "${TMPFILE}"
 echo "  ✓ app_versions/default vault created"
@@ -155,9 +158,9 @@ echo "  • app_versions/default            → All nodes"
 echo ""
 echo "Verify with:"
 echo "  knife vault list"
-echo "  knife vault show jenkins_credentials ssh_keys"
-echo "  knife vault show nagios_credentials admin_password"
-echo "  knife vault show app_versions default"
+echo "  knife vault show jenkins_credentials ssh_keys --mode client"
+echo "  knife vault show nagios_credentials admin_password --mode client"
+echo "  knife vault show app_versions default --mode client"
 echo ""
 echo "SSH keys saved at:"
 echo "  Private: ~/.chef/jenkins_agent_key"
