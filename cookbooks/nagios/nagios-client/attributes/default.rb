@@ -93,5 +93,25 @@ default['nagios']['nrpe']['jenkins_agent_commands'] = {
   'check_jenkins_agent_workdir' => '/bin/bash -c \'test -d /var/lib/jenkins/agent && echo "OK: agent work directory exists" || (echo "CRITICAL: agent work directory missing"; exit 2)\'',
 }
 
+# Prometheus server-specific check commands
+default['nagios']['nrpe']['prometheus_commands'] = {
+  'check_prometheus_process' => '-C prometheus -c 1:',
+}
+
+# Prometheus server health check commands
+default['nagios']['nrpe']['prometheus_health_commands'] = {
+  'check_prometheus_http' => '/usr/lib/nagios/plugins/check_http -H localhost -p 9090 -u /-/healthy -e 200',
+}
+
+# Grafana server-specific check commands
+default['nagios']['nrpe']['grafana_commands'] = {
+  'check_grafana_process' => '-a grafana -c 1:',
+}
+
+# Grafana server health check commands
+default['nagios']['nrpe']['grafana_health_commands'] = {
+  'check_grafana_http' => '/usr/lib/nagios/plugins/check_http -H localhost -p 3000 -u /api/health -e 200',
+}
+
 # Additional custom commands can be added here or via role/environment override
 default['nagios']['nrpe']['custom_commands'] = {}

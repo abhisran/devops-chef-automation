@@ -1,6 +1,6 @@
 name 'nagios-server'
 maintainer 'Abhishek Ranjan'
-version '0.1.0'
+version '0.1.1'
 chef_version '>= 16'
 
 depends 'chef-vault', '~> 4.0'

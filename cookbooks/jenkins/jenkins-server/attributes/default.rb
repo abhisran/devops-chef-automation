@@ -62,4 +62,5 @@ default['jenkins']['plugins'] = %w(
   maven-plugin
   gradle
   nodejs
+  prometheus
 )

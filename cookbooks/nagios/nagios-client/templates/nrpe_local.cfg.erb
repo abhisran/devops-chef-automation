@@ -53,6 +53,34 @@ command[<%= command_name %>]=<%= command_line %>
 <% end -%>
 
 <% end -%>
+<% if @prometheus_commands && !@prometheus_commands.empty? -%>
+# Prometheus server-specific process check commands
+<% @prometheus_commands.each do |command_name, command_args| -%>
+command[<%= command_name %>]=<%= @plugin_dir %>/check_procs <%= command_args %>
+<% end -%>
+
+<% end -%>
+<% if @prometheus_health_commands && !@prometheus_health_commands.empty? -%>
+# Prometheus server health endpoint checks
+<% @prometheus_health_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+
+<% end -%>
+<% if @grafana_commands && !@grafana_commands.empty? -%>
+# Grafana server-specific process check commands
+<% @grafana_commands.each do |command_name, command_args| -%>
+command[<%= command_name %>]=<%= @plugin_dir %>/check_procs <%= command_args %>
+<% end -%>
+
+<% end -%>
+<% if @grafana_health_commands && !@grafana_health_commands.empty? -%>
+# Grafana server health endpoint checks
+<% @grafana_health_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+
+<% end -%>
 # Custom commands defined via Chef attributes
 <% @custom_commands.each do |command_name, command_line| -%>
 command[<%= command_name %>]=<%= command_line %>

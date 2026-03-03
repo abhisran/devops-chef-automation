@@ -33,6 +33,24 @@ scrape_configs:
 <% if config['scrape_interval'] -%>
     scrape_interval: <%= config['scrape_interval'] %>
 <% end -%>
+<% if config['bearer_token_file'] -%>
+    bearer_token_file: "<%= config['bearer_token_file'] %>"
+<% end -%>
+<% if config['tls_config'] -%>
+    tls_config:
+<% if config['tls_config']['insecure_skip_verify'] -%>
+      insecure_skip_verify: true
+<% end -%>
+<% if config['tls_config']['ca_file'] -%>
+      ca_file: "<%= config['tls_config']['ca_file'] %>"
+<% end -%>
+<% if config['tls_config']['cert_file'] -%>
+      cert_file: "<%= config['tls_config']['cert_file'] %>"
+<% end -%>
+<% if config['tls_config']['key_file'] -%>
+      key_file: "<%= config['tls_config']['key_file'] %>"
+<% end -%>
+<% end -%>
     static_configs:
       - targets:
 <% config['targets'].each do |target| -%>

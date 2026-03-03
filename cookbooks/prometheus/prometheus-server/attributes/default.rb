@@ -21,6 +21,7 @@ default['prometheus']['server']['scrape_timeout'] = '10s'
 
 # Scrape targets
 # Each entry: { 'job_name' => '...', 'targets' => ['host:port', ...], 'metrics_path' => '/metrics', 'scheme' => 'http' }
+# Optional keys: 'tls_config' => { 'insecure_skip_verify' => true }, 'bearer_token_file' => '/path/to/token'
 default['prometheus']['server']['scrape_configs'] = [
   {
     'job_name' => 'prometheus',
@@ -41,6 +42,87 @@ default['prometheus']['server']['scrape_configs'] = [
       '192.168.1.77:9100',
       '192.168.1.78:9100',
     ],
+    'metrics_path' => '/metrics',
+    'scheme' => 'http',
+  },
+  # Kubernetes API Server metrics (HTTPS, requires bearer token)
+  {
+    'job_name' => 'kube_apiserver',
+    'targets' => ['192.168.1.71:6443'],
+    'metrics_path' => '/metrics',
+    'scheme' => 'https',
+    'tls_config' => { 'insecure_skip_verify' => true },
+    'bearer_token_file' => '/etc/prometheus/k8s_token',
+  },
+  # Kubelet metrics (HTTPS on all K8s nodes, requires bearer token)
+  {
+    'job_name' => 'kubelet',
+    'targets' => [
+      '192.168.1.71:10250',
+      '192.168.1.72:10250',
+      '192.168.1.73:10250',
+    ],
+    'metrics_path' => '/metrics',
+    'scheme' => 'https',
+    'tls_config' => { 'insecure_skip_verify' => true },
+    'bearer_token_file' => '/etc/prometheus/k8s_token',
+  },
+  # cAdvisor metrics via kubelet (per-container CPU/memory/restarts)
+  {
+    'job_name' => 'cadvisor',
+    'targets' => [
+      '192.168.1.71:10250',
+      '192.168.1.72:10250',
+      '192.168.1.73:10250',
+    ],
+    'metrics_path' => '/metrics/cadvisor',
+    'scheme' => 'https',
+    'tls_config' => { 'insecure_skip_verify' => true },
+    'bearer_token_file' => '/etc/prometheus/k8s_token',
+  },
+  # etcd metrics (HTTP on metrics port)
+  # Note: kubeadm defaults etcd --listen-metrics-urls to http://127.0.0.1:2381.
+  # To scrape externally, add --listen-metrics-urls=http://0.0.0.0:2381 to the
+  # etcd static pod manifest (/etc/kubernetes/manifests/etcd.yaml).
+  {
+    'job_name' => 'etcd',
+    'targets' => ['192.168.1.71:2381'],
+    'metrics_path' => '/metrics',
+    'scheme' => 'http',
+  },
+  # kube-scheduler metrics (HTTPS, requires bearer token)
+  # Note: kubeadm defaults --bind-address to 127.0.0.1. To scrape externally,
+  # set --bind-address=0.0.0.0 in /etc/kubernetes/manifests/kube-scheduler.yaml.
+  {
+    'job_name' => 'kube_scheduler',
+    'targets' => ['192.168.1.71:10259'],
+    'metrics_path' => '/metrics',
+    'scheme' => 'https',
+    'tls_config' => { 'insecure_skip_verify' => true },
+    'bearer_token_file' => '/etc/prometheus/k8s_token',
+  },
+  # kube-controller-manager metrics (HTTPS, requires bearer token)
+  # Note: kubeadm defaults --bind-address to 127.0.0.1. To scrape externally,
+  # set --bind-address=0.0.0.0 in /etc/kubernetes/manifests/kube-controller-manager.yaml.
+  {
+    'job_name' => 'kube_controller_manager',
+    'targets' => ['192.168.1.71:10257'],
+    'metrics_path' => '/metrics',
+    'scheme' => 'https',
+    'tls_config' => { 'insecure_skip_verify' => true },
+    'bearer_token_file' => '/etc/prometheus/k8s_token',
+  },
+  # Jenkins metrics (requires the 'prometheus' Jenkins plugin)
+  {
+    'job_name' => 'jenkins',
+    'targets' => ['192.168.1.75:8080'],
+    'metrics_path' => '/prometheus',
+    'scheme' => 'http',
+  },
+  # Grafana built-in metrics
+  {
+    'job_name' => 'grafana',
+    'targets' => ['192.168.1.78:3000'],
     'metrics_path' => '/metrics',
     'scheme' => 'http',
   },
@@ -97,6 +179,87 @@ default['prometheus']['server']['alert_rules']['groups'] = [
         'annotations' => {
           'summary' => 'Low disk space on {{ $labels.instance }}',
           'description' => 'Disk space is below 15% on {{ $labels.instance }} ({{ $labels.mountpoint }}).',
+        },
+      },
+    ],
+  },
+  {
+    'name' => 'kubernetes_alerts',
+    'rules' => [
+      {
+        'alert' => 'KubeAPIServerDown',
+        'expr' => 'up{job="kube_apiserver"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Kubernetes API Server is down',
+          'description' => 'The Kubernetes API Server on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'KubeletDown',
+        'expr' => 'up{job="kubelet"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Kubelet down on {{ $labels.instance }}',
+          'description' => 'Kubelet on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'EtcdDown',
+        'expr' => 'up{job="etcd"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'etcd is down',
+          'description' => 'etcd on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'KubeSchedulerDown',
+        'expr' => 'up{job="kube_scheduler"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Kubernetes Scheduler is down',
+          'description' => 'The Kubernetes Scheduler on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'KubeControllerManagerDown',
+        'expr' => 'up{job="kube_controller_manager"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Kubernetes Controller Manager is down',
+          'description' => 'The Kubernetes Controller Manager on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+
+    ],
+  },
+  {
+    'name' => 'service_alerts',
+    'rules' => [
+      {
+        'alert' => 'JenkinsDown',
+        'expr' => 'up{job="jenkins"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Jenkins is down',
+          'description' => 'Jenkins on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'GrafanaDown',
+        'expr' => 'up{job="grafana"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Grafana is down',
+          'description' => 'Grafana on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
         },
       },
     ],

@@ -50,6 +50,14 @@ default['nagios']['hostgroups'] = [
     'name' => 'monitoring-servers',
     'alias' => 'Monitoring Servers',
   },
+  {
+    'name' => 'prometheus-servers',
+    'alias' => 'Prometheus Servers',
+  },
+  {
+    'name' => 'grafana-servers',
+    'alias' => 'Grafana Servers',
+  },
 ]
 
 # Monitored hosts configuration
@@ -79,6 +87,12 @@ default['nagios']['monitored_hosts'] = [
     'hostgroups' => %w(monitored-servers infrastructure-servers),
   },
   {
+    'host_name' => 'nagios-server',
+    'alias' => 'Nagios Server',
+    'address' => '192.168.1.74',
+    'hostgroups' => %w(monitored-servers infrastructure-servers),
+  },
+  {
     'host_name' => 'jenkins-server',
     'alias' => 'Jenkins Controller',
     'address' => '192.168.1.75',
@@ -94,13 +108,13 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'prom-server',
     'alias' => 'Prometheus Server',
     'address' => '192.168.1.77',
-    'hostgroups' => %w(monitored-servers monitoring-servers),
+    'hostgroups' => %w(monitored-servers monitoring-servers prometheus-servers),
   },
   {
     'host_name' => 'grafana-server',
     'alias' => 'Grafana Server',
     'address' => '192.168.1.78',
-    'hostgroups' => %w(monitored-servers monitoring-servers),
+    'hostgroups' => %w(monitored-servers monitoring-servers grafana-servers),
   },
 ]
 
@@ -161,9 +175,19 @@ default['nagios']['hostgroup_services'] = {
     { 'description' => 'Jenkins Web UI', 'check_command' => 'check_nrpe!check_jenkins_http' },
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
   ],
-  # Monitoring server checks (Prometheus, Grafana, etc.)
+  # Common monitoring server checks (Prometheus + Grafana)
   'monitoring-servers' => [
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
+  # Prometheus server-specific checks
+  'prometheus-servers' => [
+    { 'description' => 'Prometheus Process', 'check_command' => 'check_nrpe!check_prometheus_process' },
+    { 'description' => 'Prometheus Health', 'check_command' => 'check_nrpe!check_prometheus_http' },
+  ],
+  # Grafana server-specific checks
+  'grafana-servers' => [
+    { 'description' => 'Grafana Process', 'check_command' => 'check_nrpe!check_grafana_process' },
+    { 'description' => 'Grafana Health', 'check_command' => 'check_nrpe!check_grafana_http' },
   ],
   # Jenkins agent checks
   'jenkins-agents' => [

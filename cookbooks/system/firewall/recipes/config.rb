@@ -67,7 +67,7 @@ end
 
 if k8s_enabled
   execute 'ufw-forward-policy-accept' do
-    command "sed -i 's/^DEFAULT_FORWARD_POLICY=.*$/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw"
+    command "sed -i 's/^DEFAULT_FORWARD_POLICY=.*$/DEFAULT_FORWARD_POLICY=\"ACCEPT\"/' /etc/default/ufw"
     only_if "grep -q 'DEFAULT_FORWARD_POLICY=\"DROP\"' /etc/default/ufw"
     notifies :run, 'execute[ufw-reload]', :delayed
   end

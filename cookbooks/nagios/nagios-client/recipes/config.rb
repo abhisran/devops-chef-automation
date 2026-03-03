@@ -57,6 +57,10 @@ if platform_family?('debian')
       jenkins_commands: node['nagios']['nrpe']['jenkins_commands'],
       jenkins_health_commands: node['nagios']['nrpe']['jenkins_health_commands'],
       jenkins_agent_commands: node['nagios']['nrpe']['jenkins_agent_commands'],
+      prometheus_commands: node['nagios']['nrpe']['prometheus_commands'],
+      prometheus_health_commands: node['nagios']['nrpe']['prometheus_health_commands'],
+      grafana_commands: node['nagios']['nrpe']['grafana_commands'],
+      grafana_health_commands: node['nagios']['nrpe']['grafana_health_commands'],
       plugin_dir: node['nagios']['nrpe']['plugin_dir'],
       mem_warn: 80,
       mem_crit: 90
