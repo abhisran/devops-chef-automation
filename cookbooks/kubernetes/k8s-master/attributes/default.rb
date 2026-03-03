@@ -41,6 +41,9 @@ default['kubernetes']['rbac']['prometheus']['service_account'] = 'prometheus'
 default['kubernetes']['rbac']['prometheus']['namespace'] = 'monitoring'
 default['kubernetes']['rbac']['prometheus']['token_output_path'] = '/etc/kubernetes/prometheus-token.txt'
 
+# Monitoring — patch static pod manifests to expose metrics on 0.0.0.0
+default['kubernetes']['monitoring']['patch_manifests'] = true
+
 # Firewall
 default['firewall']['rule_groups']['k8s_master']['enabled'] = true
 
