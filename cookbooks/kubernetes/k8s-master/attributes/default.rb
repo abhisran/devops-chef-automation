@@ -35,6 +35,12 @@ default['kubernetes']['rbac']['jenkins']['service_account'] = 'jenkins-deployer'
 default['kubernetes']['rbac']['jenkins']['namespace'] = 'ci-cd'
 default['kubernetes']['rbac']['jenkins']['deploy_namespaces'] = %w(staging production)
 
+# Prometheus monitoring RBAC
+default['kubernetes']['rbac']['prometheus']['enabled'] = true
+default['kubernetes']['rbac']['prometheus']['service_account'] = 'prometheus'
+default['kubernetes']['rbac']['prometheus']['namespace'] = 'monitoring'
+default['kubernetes']['rbac']['prometheus']['token_output_path'] = '/etc/kubernetes/prometheus-token.txt'
+
 # Firewall
 default['firewall']['rule_groups']['k8s_master']['enabled'] = true
 

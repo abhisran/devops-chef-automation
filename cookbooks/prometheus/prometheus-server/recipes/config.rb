@@ -2,6 +2,23 @@ config_dir = node['prometheus']['server']['config_dir']
 prom_user = node['prometheus']['server']['user']
 prom_group = node['prometheus']['server']['group']
 
+# Create placeholder bearer token files referenced by scrape configs so
+# promtool validation does not fail before the real tokens are provisioned.
+# The k8s-master::rbac recipe provisions the actual token on the master node
+# at /etc/kubernetes/prometheus-token.txt — copy it to this server:
+#   scp master-node:/etc/kubernetes/prometheus-token.txt /etc/prometheus/k8s_token
+node['prometheus']['server']['scrape_configs'].each do |sc|
+  next unless sc['bearer_token_file']
+
+  file sc['bearer_token_file'] do
+    owner prom_user
+    group prom_group
+    mode '0600'
+    content 'PLACEHOLDER — replace with a real token'
+    action :create_if_missing
+  end
+end
+
 # Deploy main Prometheus configuration
 template "#{config_dir}/prometheus.yml" do
   source 'prometheus.yml.erb'

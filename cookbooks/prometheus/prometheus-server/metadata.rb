@@ -3,7 +3,7 @@ maintainer 'Abhishek Ranjan'
 maintainer_email 'abhisran6@gmail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures Prometheus monitoring server'
-version '0.1.2'
+version '0.1.3'
 chef_version '>= 16'
 
 depends 'chef-vault', '~> 4.0'
