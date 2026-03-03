@@ -10,6 +10,8 @@ Automated infrastructure deployment using Chef — Kubernetes clusters, Jenkins 
 
 ```
 cookbooks/
+├── grafana/
+│   └── grafana-server/    # Grafana OSS: Prometheus datasource, dashboard provisioning
 ├── jenkins/
 │   ├── jenkins-server/    # Controller: JCasC, 30+ plugins, Vault SSH credentials
 │   └── jenkins-agent/     # Agent: Docker CE, kubectl, kubeconfig from Vault
@@ -19,8 +21,12 @@ cookbooks/
 ├── nagios/
 │   ├── nagios-server/     # Nagios Core from source, host/service auto-config
 │   └── nagios-client/     # NRPE client: system + K8s + Jenkins checks
+├── prometheus/
+│   ├── prometheus-server/ # Prometheus: scrape configs, alert rules, TSDB
+│   └── prometheus-client/ # Node Exporter: system metrics for all nodes
 └── system/
     ├── apt/               # APT cache management & unattended upgrades
+    ├── firewall/          # UFW firewall: role-based port rules, K8s forwarding
     └── package/           # Essential system packages (curl, git, conntrack, etc.)
 ```
 
@@ -66,12 +72,16 @@ berks --version
 ```bash
 cd cookbooks/system/apt && berks install && berks upload && cd -
 cd cookbooks/system/package && berks install && berks upload && cd -
+cd cookbooks/system/firewall && berks install && berks upload && cd -
 cd cookbooks/kubernetes/k8s-master && berks install && berks upload && cd -
 cd cookbooks/kubernetes/k8s-worker && berks install && berks upload && cd -
 cd cookbooks/jenkins/jenkins-server && berks install && berks upload && cd -
 cd cookbooks/jenkins/jenkins-agent && berks install && berks upload && cd -
 cd cookbooks/nagios/nagios-server && berks install && berks upload && cd -
 cd cookbooks/nagios/nagios-client && berks install && berks upload && cd -
+cd cookbooks/prometheus/prometheus-server && berks install && berks upload && cd -
+cd cookbooks/prometheus/prometheus-client && berks install && berks upload && cd -
+cd cookbooks/grafana/grafana-server && berks install && berks upload && cd -
 ```
 
 > `berks install` resolves and downloads cookbook dependencies.  
@@ -91,6 +101,13 @@ knife node run_list add <JENKINS_AGENT_NODE> 'recipe[apt],recipe[package],recipe
 # Nagios
 knife node run_list add <NAGIOS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[nagios-server]'
 knife node run_list add <NAGIOS_CLIENT_NODE> 'recipe[apt],recipe[package],recipe[nagios-client]'
+
+# Prometheus
+knife node run_list add <PROMETHEUS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[prometheus-server]'
+knife node run_list add <PROMETHEUS_CLIENT_NODE> 'recipe[apt],recipe[package],recipe[prometheus-client]'
+
+# Grafana
+knife node run_list add <GRAFANA_SERVER_NODE> 'recipe[apt],recipe[package],recipe[grafana-server]'
 ```
 
 #### 3. Apply on target nodes
@@ -105,6 +122,8 @@ Or run remotely from your workstation:
 knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user <SSH_USER>
 knife ssh 'name:jenkins-*' 'sudo chef-client' --ssh-user <SSH_USER>
 knife ssh 'name:nagios-*' 'sudo chef-client' --ssh-user <SSH_USER>
+knife ssh 'name:prom-*' 'sudo chef-client' --ssh-user <SSH_USER>
+knife ssh 'name:grafana-*' 'sudo chef-client' --ssh-user <SSH_USER>
 ```
 
 ### Option 2: Without Chef Server (Chef Zero/Local Mode)
@@ -134,8 +153,9 @@ sudo chef-client -z \
 | **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
 | **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
-| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0 (compiled from source) |
-| **Security** | Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
+| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
+| **Visualization** | Grafana OSS 12.x, Prometheus datasource, dashboard provisioning |
+| **Security** | UFW firewall (role-based), Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
 | **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
 
 ---

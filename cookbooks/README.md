@@ -1,6 +1,6 @@
 # 🍳 Chef Cookbooks — Homelab Infrastructure as Code
 
-A collection of **11 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
+A collection of **12 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
 
 > **📌 Project Evolution:** This project started as a single Kubernetes cookbook for automating cluster provisioning. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), and system configuration — demonstrating how incremental automation compounds into a fully managed environment.
 
@@ -70,6 +70,8 @@ A collection of **11 Chef cookbooks** that fully automate the provisioning, conf
 ## 📁 Cookbook Structure
 
 ```
+├── grafana/
+│   └── grafana-server/  → Grafana OSS: Prometheus datasource, dashboard provisioning
 ├── jenkins/
 │   ├── jenkins-server/  → Controller: JCasC, 30+ plugins, Vault SSH credentials
 │   └── jenkins-agent/   → Agent: Docker CE, kubectl, kubeconfig from Vault
@@ -93,6 +95,9 @@ A collection of **11 Chef cookbooks** that fully automate the provisioning, conf
 ---
 
 ## 📦 Cookbooks
+
+### [grafana-server](grafana/grafana-server/)
+Installs Grafana OSS via the official APT repository with attribute-driven configuration. Deploys `grafana.ini` with sensible defaults, provisions **Prometheus as a default datasource**, and sets up file-based dashboard provisioning from `/var/lib/grafana/dashboards`. Uses **Unified Alerting** (Grafana 12+ removed legacy alerting). Includes UFW firewall rules for port 3000.
 
 ### [jenkins-server](jenkins/jenkins-server/)
 Installs Jenkins with OpenJDK 21, deploys 30+ plugins via the official plugin manager CLI, and configures the server entirely through **Jenkins Configuration as Code (JCasC)**. Agent nodes are auto-registered via SSH using credentials stored in **Chef Vault** — zero manual setup in the Jenkins UI.
