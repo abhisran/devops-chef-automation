@@ -95,6 +95,13 @@ default['firewall']['rule_groups']['k8s_master']['rules'] = {
     'action' => 'allow',
     'comment' => 'kubelet healthz',
   },
+  'kube_state_metrics' => {
+    'port' => '30080',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'source' => '192.168.1.77',
+    'comment' => 'kube-state-metrics NodePort (Prometheus only)',
+  },
   'weave_tcp' => {
     'port' => '6783',
     'protocol' => 'tcp',

@@ -44,6 +44,13 @@ default['kubernetes']['rbac']['prometheus']['token_output_path'] = '/etc/kuberne
 # Monitoring — patch static pod manifests to expose metrics on 0.0.0.0
 default['kubernetes']['monitoring']['patch_manifests'] = true
 
+# kube-state-metrics
+default['kubernetes']['kube_state_metrics']['enabled'] = true
+default['kubernetes']['kube_state_metrics']['version'] = '2.13.0'
+default['kubernetes']['kube_state_metrics']['namespace'] = 'kube-system'
+default['kubernetes']['kube_state_metrics']['nodeport'] = 30080
+default['kubernetes']['kube_state_metrics']['image'] = 'registry.k8s.io/kube-state-metrics/kube-state-metrics'
+
 # Firewall
 default['firewall']['rule_groups']['k8s_master']['enabled'] = true
 

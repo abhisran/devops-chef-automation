@@ -126,6 +126,14 @@ default['prometheus']['server']['scrape_configs'] = [
     'metrics_path' => '/metrics',
     'scheme' => 'http',
   },
+  # kube-state-metrics (K8s object state: pods, deployments, nodes, jobs, etc.)
+  # Deployed as a pod inside the cluster, exposed via NodePort 30080 on master-node
+  {
+    'job_name' => 'kube_state_metrics',
+    'targets' => ['192.168.1.71:30080'],
+    'metrics_path' => '/metrics',
+    'scheme' => 'http',
+  },
 ]
 
 # Firewall
@@ -236,7 +244,71 @@ default['prometheus']['server']['alert_rules']['groups'] = [
           'description' => 'The Kubernetes Controller Manager on {{ $labels.instance }} has been unreachable for more than 5 minutes.',
         },
       },
-
+    ],
+  },
+  {
+    'name' => 'kube_state_metrics_alerts',
+    'rules' => [
+      {
+        'alert' => 'KubeStateMetricsDown',
+        'expr' => 'up{job="kube_state_metrics"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'kube-state-metrics is down',
+          'description' => 'kube-state-metrics on {{ $labels.instance }} has been unreachable for more than 5 minutes. K8s object state monitoring is unavailable.',
+        },
+      },
+      {
+        'alert' => 'PodCrashLooping',
+        'expr' => 'rate(kube_pod_container_status_restarts_total[15m]) * 60 * 5 > 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping',
+          'description' => 'Pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting frequently ({{ printf "%.2f" $value }} restarts per 5 min).',
+        },
+      },
+      {
+        'alert' => 'DeploymentReplicasMismatch',
+        'expr' => 'kube_deployment_spec_replicas != kube_deployment_status_replicas_available',
+        'for' => '10m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }} replicas mismatch',
+          'description' => 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has available replicas != desired for more than 10 minutes.',
+        },
+      },
+      {
+        'alert' => 'KubeNodeNotReady',
+        'expr' => 'kube_node_status_condition{condition="Ready",status="true"} == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Node {{ $labels.node }} is not ready',
+          'description' => 'Node {{ $labels.node }} has been in a NotReady state for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'KubeJobFailed',
+        'expr' => 'kube_job_status_failed > 0',
+        'for' => '1m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Job {{ $labels.namespace }}/{{ $labels.job_name }} failed',
+          'description' => 'Job {{ $labels.namespace }}/{{ $labels.job_name }} has failed.',
+        },
+      },
+      {
+        'alert' => 'PodNotReady',
+        'expr' => 'kube_pod_status_phase{phase=~"Pending|Unknown"} > 0',
+        'for' => '15m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready',
+          'description' => 'Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in {{ $labels.phase }} phase for more than 15 minutes.',
+        },
+      },
     ],
   },
   {
