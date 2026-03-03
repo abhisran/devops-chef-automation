@@ -1,6 +1,6 @@
 name 'nagios-client'
 maintainer 'Abhishek Ranjan'
-version '0.1.1'
+version '0.1.2'
 chef_version '>= 16'
 description 'Installs and configures NRPE client for Nagios monitoring'
 

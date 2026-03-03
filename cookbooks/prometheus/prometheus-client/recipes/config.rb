@@ -13,3 +13,21 @@ directory textfile_dir do
   mode '0755'
   recursive true
 end
+
+# Deploy Chef client metrics collector script for textfile collector
+template '/usr/local/bin/chef_client_metrics.sh' do
+  source 'chef_client_metrics.sh.erb'
+  owner 'root'
+  group 'root'
+  mode '0755'
+  variables(
+    textfile_dir: textfile_dir
+  )
+end
+
+# Run the collector every 5 minutes via cron
+cron 'chef_client_metrics' do
+  minute '*/5'
+  command '/usr/local/bin/chef_client_metrics.sh'
+  user 'root'
+end

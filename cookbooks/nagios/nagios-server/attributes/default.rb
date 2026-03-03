@@ -58,6 +58,10 @@ default['nagios']['hostgroups'] = [
     'name' => 'grafana-servers',
     'alias' => 'Grafana Servers',
   },
+  {
+    'name' => 'chef-clients',
+    'alias' => 'Chef Managed Nodes',
+  },
 ]
 
 # Monitored hosts configuration
@@ -66,19 +70,19 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'master-node',
     'alias' => 'K8s Master Node',
     'address' => '192.168.1.71',
-    'hostgroups' => %w(monitored-servers k8s-cluster k8s-masters),
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-masters chef-clients),
   },
   {
     'host_name' => 'worker-node-1',
     'alias' => 'K8s Worker Node 1',
     'address' => '192.168.1.72',
-    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers chef-clients),
   },
   {
     'host_name' => 'worker-node-2',
     'alias' => 'K8s Worker Node 2',
     'address' => '192.168.1.73',
-    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers),
+    'hostgroups' => %w(monitored-servers k8s-cluster k8s-workers chef-clients),
   },
   {
     'host_name' => 'chef-server',
@@ -96,25 +100,25 @@ default['nagios']['monitored_hosts'] = [
     'host_name' => 'jenkins-server',
     'alias' => 'Jenkins Controller',
     'address' => '192.168.1.75',
-    'hostgroups' => %w(monitored-servers jenkins-servers),
+    'hostgroups' => %w(monitored-servers jenkins-servers chef-clients),
   },
   {
     'host_name' => 'jenkins-agent',
     'alias' => 'Jenkins Agent 1',
     'address' => '192.168.1.76',
-    'hostgroups' => %w(monitored-servers jenkins-agents),
+    'hostgroups' => %w(monitored-servers jenkins-agents chef-clients),
   },
   {
     'host_name' => 'prom-server',
     'alias' => 'Prometheus Server',
     'address' => '192.168.1.77',
-    'hostgroups' => %w(monitored-servers monitoring-servers prometheus-servers),
+    'hostgroups' => %w(monitored-servers monitoring-servers prometheus-servers chef-clients),
   },
   {
     'host_name' => 'grafana-server',
     'alias' => 'Grafana Server',
     'address' => '192.168.1.78',
-    'hostgroups' => %w(monitored-servers monitoring-servers grafana-servers),
+    'hostgroups' => %w(monitored-servers monitoring-servers grafana-servers chef-clients),
   },
 ]
 
@@ -194,5 +198,11 @@ default['nagios']['hostgroup_services'] = {
     { 'description' => 'Jenkins Agent User', 'check_command' => 'check_nrpe!check_jenkins_agent_user' },
     { 'description' => 'Jenkins Agent Work Dir', 'check_command' => 'check_nrpe!check_jenkins_agent_workdir' },
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
+  # Chef client checks - applied to all nodes running chef-client
+  'chef-clients' => [
+    { 'description' => 'Chef Client Timer', 'check_command' => 'check_nrpe!check_chef_client_timer' },
+    { 'description' => 'Chef Client Last Run', 'check_command' => 'check_nrpe!check_chef_client_run' },
+    { 'description' => 'Chef Client Run Status', 'check_command' => 'check_nrpe!check_chef_client_status' },
   ],
 }

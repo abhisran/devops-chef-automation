@@ -81,6 +81,13 @@ command[<%= command_name %>]=<%= command_line %>
 <% end -%>
 
 <% end -%>
+<% if @chef_client_commands && !@chef_client_commands.empty? -%>
+# Chef client health check commands
+<% @chef_client_commands.each do |command_name, command_line| -%>
+command[<%= command_name %>]=<%= command_line %>
+<% end -%>
+
+<% end -%>
 # Custom commands defined via Chef attributes
 <% @custom_commands.each do |command_name, command_line| -%>
 command[<%= command_name %>]=<%= command_line %>

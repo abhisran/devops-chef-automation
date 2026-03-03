@@ -113,5 +113,13 @@ default['nagios']['nrpe']['grafana_health_commands'] = {
   'check_grafana_http' => '/usr/lib/nagios/plugins/check_http -H localhost -p 3000 -u /api/health -e 200',
 }
 
+# Chef client-specific check commands
+# These monitor the health of the chef-client systemd timer and run status
+default['nagios']['nrpe']['chef_client_commands'] = {
+  'check_chef_client_timer' => '/bin/bash -c \'if systemctl is-active --quiet chef-client.timer; then echo "OK: chef-client.timer is active"; exit 0; else echo "CRITICAL: chef-client.timer is not active"; exit 2; fi\'',
+  'check_chef_client_run' => '/bin/bash -c \'LOG=/var/log/chef/client.log; if [ ! -f "$LOG" ]; then echo "CRITICAL: Chef client log not found"; exit 2; fi; AGE=$(( $(date +%s) - $(stat -c %Y "$LOG") )); if [ $AGE -gt 3600 ]; then echo "CRITICAL: Chef client last ran ${AGE}s ago"; exit 2; elif [ $AGE -gt 2700 ]; then echo "WARNING: Chef client last ran ${AGE}s ago"; exit 1; else echo "OK: Chef client last ran ${AGE}s ago"; exit 0; fi\'',
+  'check_chef_client_status' => '/bin/bash -c \'STATUS=$(systemctl show chef-client.service --property=Result --value 2>/dev/null); if [ "$STATUS" = "success" ]; then echo "OK: Last chef-client run succeeded"; exit 0; elif [ -z "$STATUS" ]; then echo "WARNING: chef-client.service status unknown"; exit 1; else echo "CRITICAL: Last chef-client run failed (Result=$STATUS)"; exit 2; fi\'',
+}
+
 # Additional custom commands can be added here or via role/environment override
 default['nagios']['nrpe']['custom_commands'] = {}

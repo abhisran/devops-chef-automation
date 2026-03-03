@@ -264,4 +264,39 @@ default['prometheus']['server']['alert_rules']['groups'] = [
       },
     ],
   },
+  {
+    'name' => 'chef_client_alerts',
+    'rules' => [
+      {
+        'alert' => 'ChefClientTimerInactive',
+        'expr' => 'chef_client_timer_active == 0',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Chef client timer inactive on {{ $labels.instance }}',
+          'description' => 'The chef-client.timer systemd unit is not active on {{ $labels.instance }} for more than 5 minutes.',
+        },
+      },
+      {
+        'alert' => 'ChefClientRunFailed',
+        'expr' => 'chef_client_last_run_success == 0',
+        'for' => '10m',
+        'labels' => { 'severity' => 'warning' },
+        'annotations' => {
+          'summary' => 'Chef client run failed on {{ $labels.instance }}',
+          'description' => 'The last chef-client run on {{ $labels.instance }} has been in a failed state for more than 10 minutes.',
+        },
+      },
+      {
+        'alert' => 'ChefClientRunStale',
+        'expr' => 'time() - chef_client_last_run_timestamp_seconds > 3600',
+        'for' => '5m',
+        'labels' => { 'severity' => 'critical' },
+        'annotations' => {
+          'summary' => 'Chef client run stale on {{ $labels.instance }}',
+          'description' => 'Chef client on {{ $labels.instance }} has not run for over 1 hour (expected every 30 minutes).',
+        },
+      },
+    ],
+  },
 ]
