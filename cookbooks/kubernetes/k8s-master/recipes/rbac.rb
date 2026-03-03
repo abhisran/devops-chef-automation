@@ -23,6 +23,9 @@ if node['kubernetes']['rbac']['jenkins']['enabled']
   execute 'apply-jenkins-rbac' do
     command "kubectl apply -f #{rbac_manifest}"
     action :run
+    retries 3
+    retry_delay 10
+    only_if 'kubectl get --raw /readyz 2>/dev/null'
     only_if { ::File.exist?('/root/.kube/config') && ::File.exist?(rbac_manifest) }
   end
 end
@@ -48,6 +51,9 @@ if node['kubernetes']['rbac']['prometheus']['enabled']
   execute 'apply-prometheus-rbac' do
     command "kubectl apply -f #{prom_rbac_manifest}"
     action :run
+    retries 3
+    retry_delay 10
+    only_if 'kubectl get --raw /readyz 2>/dev/null'
     only_if { ::File.exist?('/root/.kube/config') && ::File.exist?(prom_rbac_manifest) }
   end
 
