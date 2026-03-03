@@ -1,0 +1,10 @@
+name 'grafana-server'
+maintainer 'Abhishek Ranjan'
+maintainer_email 'abhisran6@gmail.com'
+license 'All Rights Reserved'
+description 'Installs/Configures Grafana visualization server'
+version '0.1.0'
+chef_version '>= 16'
+
+depends 'chef-vault', '~> 4.0'
+depends 'firewall'
