@@ -36,16 +36,6 @@ else
   raise "Unsupported platform family: #{node['platform_family']}. This cookbook supports debian and rhel families."
 end
 
-# Create symlinks for Nagios plugins (Debian packages install to /usr/lib/nagios/plugins)
-if platform_family?('debian')
-  # Symlink plugins from Debian location to Nagios expected location
-  execute 'symlink_nagios_plugins' do
-    command "for plugin in /usr/lib/nagios/plugins/check_*; do ln -sf \"$plugin\" #{node['nagios']['install_dir']}/libexec/; done"
-    only_if { ::Dir.exist?('/usr/lib/nagios/plugins') }
-    not_if { ::File.symlink?("#{node['nagios']['install_dir']}/libexec/check_ping") }
-  end
-end
-
 group node['nagios']['group']
 
 user node['nagios']['user'] do
@@ -92,6 +82,16 @@ execute 'compile_nagios' do
     make install-webconf
   EOH
   not_if { ::File.exist?("#{node['nagios']['install_dir']}/bin/nagios") }
+end
+
+# Create symlinks for Nagios plugins (Debian packages install to /usr/lib/nagios/plugins)
+if platform_family?('debian')
+  # Symlink plugins from Debian location to Nagios expected location
+  execute 'symlink_nagios_plugins' do
+    command "for plugin in /usr/lib/nagios/plugins/check_*; do ln -sf \"$plugin\" #{node['nagios']['install_dir']}/libexec/; done"
+    only_if { ::Dir.exist?('/usr/lib/nagios/plugins') }
+    not_if { ::File.symlink?("#{node['nagios']['install_dir']}/libexec/check_ping") }
+  end
 end
 
 # Install webconf separately to handle existing installations
