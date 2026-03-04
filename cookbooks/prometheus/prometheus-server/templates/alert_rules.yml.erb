@@ -12,11 +12,11 @@ groups:
         for: <%= rule['for'] %>
         labels:
 <% rule['labels'].each do |key, value| -%>
-          <%= key %>: "<%= value %>"
+          <%= key %>: '<%= value %>'
 <% end -%>
         annotations:
 <% rule['annotations'].each do |key, value| -%>
-          <%= key %>: "<%= value %>"
+          <%= key %>: '<%= value %>'
 <% end -%>
 <% end -%>
 <% end -%>
