@@ -7,7 +7,7 @@ groups:
     rules:
 <% group['rules'].each do |rule| -%>
       - alert: <%= rule['alert'] %>
-        expr: '<%= rule['expr'] %>'
+        expr: <%= rule['expr'] %>
         for: <%= rule['for'] %>
         labels:
 <% rule['labels'].each do |key, value| -%>
