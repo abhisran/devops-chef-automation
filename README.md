@@ -84,7 +84,7 @@ cd cookbooks/prometheus/prometheus-client && berks install && berks upload && cd
 cd cookbooks/grafana/grafana-server && berks install && berks upload && cd -
 ```
 
-> `berks install` resolves and downloads cookbook dependencies.  
+> `berks install` resolves and downloads cookbook dependencies.
 > `berks upload` uploads the cookbook and its dependencies to the Chef Server.
 
 #### 2. Assign cookbooks to nodes
@@ -151,7 +151,7 @@ sudo chef-client -z \
 | Category | Technologies |
 |----------|-------------|
 | **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
-| **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
+| **Container Orchestration** | Kubernetes 1.33, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
 | **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
 | **Visualization** | Grafana OSS 12.x, Prometheus datasource, dashboard provisioning |
@@ -186,9 +186,9 @@ kubectl get nodes
 
 ## 👤 Author
 
-**Abhishek Ranjan** • DevOps Engineer  
-📧 abhisran6@gmail.com  
-💼 [LinkedIn](https://linkedin.com/in/abhishek-ranjan-4b95a0155)  
+**Abhishek Ranjan** • DevOps Engineer
+📧 abhisran6@gmail.com
+💼 [LinkedIn](https://linkedin.com/in/abhishek-ranjan-4b95a0155)
 🐙 [GitHub](https://github.com/abhisran)
 
 ---

@@ -8,7 +8,7 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
 
 ## ✨ Key Features
 
-- **Kubernetes 1.32** cluster provisioning (master + workers) with containerd, Weave CNI, and CI/CD RBAC
+- **Kubernetes 1.33** cluster provisioning (master + workers) with containerd, Weave CNI, and CI/CD RBAC
 - **Jenkins CI/CD** server with Configuration as Code (JCasC), 30+ plugins, and SSH-based agents with Docker & kubectl
 - **Nagios Core** compiled from source with **30+ monitoring checks** across system, Kubernetes, and Jenkins
 - **Prometheus** time-series monitoring with Node Exporter on all nodes and configurable alert rules
@@ -59,7 +59,7 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
 | Category | Technologies |
 |----------|-------------|
 | **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
-| **Container Orchestration** | Kubernetes 1.32, kubeadm, containerd, Weave CNI |
+| **Container Orchestration** | Kubernetes 1.33, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
 | **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
 | **Security** | UFW firewall (role-based), Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
@@ -179,7 +179,7 @@ default_attributes(
     ]
   },
   'kubernetes' => {
-    'version' => '1.32'
+    'version' => '1.33'
   }
 )
 ```
