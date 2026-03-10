@@ -1,0 +1,4 @@
+# Managed by Chef — do not edit manually
+<% @exports.each do |export| -%>
+<%= export['path'] %> <%= export['network'] %>(<%= export['options'] %>)
+<% end -%>

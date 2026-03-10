@@ -61,6 +61,8 @@ if platform_family?('debian')
       prometheus_health_commands: node['nagios']['nrpe']['prometheus_health_commands'],
       grafana_commands: node['nagios']['nrpe']['grafana_commands'],
       grafana_health_commands: node['nagios']['nrpe']['grafana_health_commands'],
+      nfs_commands: node['nagios']['nrpe']['nfs_commands'],
+      nfs_health_commands: node['nagios']['nrpe']['nfs_health_commands'],
       chef_client_commands: node['nagios']['nrpe']['chef_client_commands'],
       plugin_dir: node['nagios']['nrpe']['plugin_dir'],
       mem_warn: 80,

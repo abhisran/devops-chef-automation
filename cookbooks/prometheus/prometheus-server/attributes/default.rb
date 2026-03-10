@@ -41,6 +41,7 @@ default['prometheus']['server']['scrape_configs'] = [
       '192.168.1.76:9100',
       '192.168.1.77:9100',
       '192.168.1.78:9100',
+      '192.168.1.79:9100',
     ],
     'metrics_path' => '/metrics',
     'scheme' => 'http',

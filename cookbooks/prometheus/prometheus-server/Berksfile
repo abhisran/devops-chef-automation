@@ -3,3 +3,7 @@ source 'https://supermarket.chef.io'
 metadata
 
 cookbook 'firewall', path: '../../system/firewall'
+cookbook 'apt', path: '../../system/apt'
+cookbook 'package', path: '../../system/package'
+cookbook 'nagios-client', path: '../../nagios/nagios-client'
+cookbook 'prometheus-client', path: '../../prometheus/prometheus-client'
