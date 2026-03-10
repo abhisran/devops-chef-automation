@@ -7,6 +7,10 @@
 Chef::Log.level = :info
 
 include_recipe 'chef-vault'
+include_recipe 'apt'
+include_recipe 'package'
+include_recipe 'nagios-client'
+include_recipe 'prometheus-client'
 
 begin
   app_versions = node.run_state['app_versions'] || data_bag_item('app_versions', 'default')

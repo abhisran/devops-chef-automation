@@ -212,3 +212,32 @@ default['firewall']['rule_groups']['grafana_server']['rules'] = {
     'comment' => 'Grafana UI',
   },
 }
+
+# NFS server
+default['firewall']['rule_groups']['nfs_server']['enabled'] = false
+default['firewall']['rule_groups']['nfs_server']['rules'] = {
+  'nfs_tcp' => {
+    'port' => '2049',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'NFS TCP',
+  },
+  'nfs_udp' => {
+    'port' => '2049',
+    'protocol' => 'udp',
+    'action' => 'allow',
+    'comment' => 'NFS UDP',
+  },
+  'rpcbind_tcp' => {
+    'port' => '111',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'RPCbind TCP (NFS)',
+  },
+  'rpcbind_udp' => {
+    'port' => '111',
+    'protocol' => 'udp',
+    'action' => 'allow',
+    'comment' => 'RPCbind UDP (NFS)',
+  },
+}

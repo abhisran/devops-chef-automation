@@ -8,3 +8,6 @@ chef_version '>= 16'
 
 depends 'chef-vault', '~> 4.0'
 depends 'firewall'
+depends 'apt'
+depends 'package'
+depends 'nagios-client'

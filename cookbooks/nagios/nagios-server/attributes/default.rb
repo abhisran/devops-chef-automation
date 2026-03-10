@@ -59,6 +59,10 @@ default['nagios']['hostgroups'] = [
     'alias' => 'Grafana Servers',
   },
   {
+    'name' => 'nfs-servers',
+    'alias' => 'NFS Storage Servers',
+  },
+  {
     'name' => 'chef-clients',
     'alias' => 'Chef Managed Nodes',
   },
@@ -119,6 +123,12 @@ default['nagios']['monitored_hosts'] = [
     'alias' => 'Grafana Server',
     'address' => '192.168.1.78',
     'hostgroups' => %w(monitored-servers monitoring-servers grafana-servers chef-clients),
+  },
+  {
+    'host_name' => 'nfs-server',
+    'alias' => 'NFS Storage Server',
+    'address' => '192.168.1.79',
+    'hostgroups' => %w(monitored-servers infrastructure-servers nfs-servers chef-clients),
   },
 ]
 
@@ -200,6 +210,12 @@ default['nagios']['hostgroup_services'] = {
     { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
   ],
   # Chef client checks - applied to all nodes running chef-client
+  # NFS server-specific checks
+  'nfs-servers' => [
+    { 'description' => 'NFS Server Process', 'check_command' => 'check_nrpe!check_nfs_process' },
+    { 'description' => 'NFS Server Exports', 'check_command' => 'check_nrpe!check_nfs_exports' },
+    { 'description' => 'Swap Usage', 'check_command' => 'check_nrpe!check_swap' },
+  ],
   'chef-clients' => [
     { 'description' => 'Chef Client Timer', 'check_command' => 'check_nrpe!check_chef_client_timer' },
     { 'description' => 'Chef Client Last Run', 'check_command' => 'check_nrpe!check_chef_client_run' },

@@ -1,3 +1,7 @@
+include_recipe 'apt'
+include_recipe 'package'
+include_recipe 'nagios-client'
+
 begin
   app_versions = node.run_state['app_versions'] || data_bag_item('app_versions', 'default')
   node.run_state['app_versions'] = app_versions

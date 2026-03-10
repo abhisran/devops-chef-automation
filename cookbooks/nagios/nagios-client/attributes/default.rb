@@ -121,5 +121,15 @@ default['nagios']['nrpe']['chef_client_commands'] = {
   'check_chef_client_status' => '/bin/bash -c \'STATUS=$(systemctl show chef-client.service --property=Result --value 2>/dev/null); if [ "$STATUS" = "success" ]; then echo "OK: Last chef-client run succeeded"; exit 0; elif [ -z "$STATUS" ]; then echo "WARNING: chef-client.service status unknown"; exit 1; else echo "CRITICAL: Last chef-client run failed (Result=$STATUS)"; exit 2; fi\'',
 }
 
+# NFS server-specific check commands
+default['nagios']['nrpe']['nfs_commands'] = {
+  'check_nfs_process' => '-C nfsd -c 1:',
+}
+
+# NFS server health check commands
+default['nagios']['nrpe']['nfs_health_commands'] = {
+  'check_nfs_exports' => '/bin/bash -c \'EXPORTS=$(exportfs -s 2>/dev/null | wc -l); if [ $EXPORTS -gt 0 ]; then echo "OK: $EXPORTS NFS export(s) active"; exit 0; else echo "CRITICAL: No NFS exports found"; exit 2; fi\'',
+}
+
 # Additional custom commands can be added here or via role/environment override
 default['nagios']['nrpe']['custom_commands'] = {}

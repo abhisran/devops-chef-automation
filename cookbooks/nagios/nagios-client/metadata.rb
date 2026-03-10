@@ -5,3 +5,6 @@ chef_version '>= 16'
 description 'Installs and configures NRPE client for Nagios monitoring'
 
 depends 'firewall'
+depends 'apt'
+depends 'package'
+depends 'prometheus-client'

@@ -8,5 +8,9 @@ chef_version '>= 16.0'
 
 depends 'chef-vault', '~> 4.0'
 depends 'firewall'
+depends 'apt'
+depends 'package'
+depends 'nagios-client'
+depends 'prometheus-client'
 
 # NOTE: apt_update is a built-in resource in Chef 16+, no apt cookbook needed
