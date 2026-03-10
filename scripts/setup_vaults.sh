@@ -105,7 +105,8 @@ echo "  ✓ nagios_credentials/admin_password vault created"
 echo ""
 echo "[4/4] Creating app_versions data bag (centralized version management)..."
 
-TMPFILE=$(mktemp)
+# Create temporary JSON for the data bag (must end in .json for knife)
+TMPFILE=$(mktemp /tmp/app_versions.XXXXXX.json)
 cat > "${TMPFILE}" <<'EOF'
 {
   "id": "default",
