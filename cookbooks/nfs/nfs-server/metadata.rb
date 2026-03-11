@@ -3,7 +3,7 @@ maintainer 'Abhishek Ranjan'
 maintainer_email 'abhisran6@gmail.com'
 license 'All Rights Reserved'
 description 'Installs/Configures NFS server for shared storage'
-version '0.1.0'
+version '0.1.2'
 chef_version '>= 16.0'
 
 depends 'firewall'

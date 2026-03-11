@@ -240,4 +240,40 @@ default['firewall']['rule_groups']['nfs_server']['rules'] = {
     'action' => 'allow',
     'comment' => 'RPCbind UDP (NFS)',
   },
+  'mountd_tcp' => {
+    'port' => '32767',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'NFS mountd TCP',
+  },
+  'mountd_udp' => {
+    'port' => '32767',
+    'protocol' => 'udp',
+    'action' => 'allow',
+    'comment' => 'NFS mountd UDP',
+  },
+  'statd_tcp' => {
+    'port' => '32765',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'NFS statd TCP',
+  },
+  'statd_udp' => {
+    'port' => '32765',
+    'protocol' => 'udp',
+    'action' => 'allow',
+    'comment' => 'NFS statd UDP',
+  },
+  'lockd_tcp' => {
+    'port' => '32768',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'NFS lockd TCP',
+  },
+  'lockd_udp' => {
+    'port' => '32768',
+    'protocol' => 'udp',
+    'action' => 'allow',
+    'comment' => 'NFS lockd UDP',
+  },
 }

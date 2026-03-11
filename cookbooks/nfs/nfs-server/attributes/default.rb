@@ -1,5 +1,12 @@
 # NFS server configuration
 default['nfs']['server']['exports_file'] = '/etc/exports'
+default['nfs']['server']['config_file'] = '/etc/nfs.conf'
+default['nfs']['server']['common_config_file'] = '/etc/default/nfs-common'
+
+# Fixed ports for NFS services (to allow through firewall)
+default['nfs']['server']['ports']['mountd'] = 32767
+default['nfs']['server']['ports']['statd'] = 32765
+default['nfs']['server']['ports']['lockd'] = 32768
 
 # Default shared directories
 # Each export: path, network CIDR, and NFS options

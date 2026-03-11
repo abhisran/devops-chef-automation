@@ -1,0 +1,16 @@
+[nfsd]
+# Pin nfsd to port 2049 (default)
+port=2049
+
+[mountd]
+# Pin mountd to a fixed port for firewall compatibility
+port=<%= node['nfs']['server']['ports']['mountd'] %>
+
+[statd]
+# Pin statd to a fixed port for firewall compatibility
+port=<%= node['nfs']['server']['ports']['statd'] %>
+
+[lockd]
+# Pin lockd to a fixed port for firewall compatibility
+port=<%= node['nfs']['server']['ports']['lockd'] %>
+udp-port=<%= node['nfs']['server']['ports']['lockd'] %>
