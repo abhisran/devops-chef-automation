@@ -28,6 +28,65 @@ if node['kubernetes']['rbac']['jenkins']['enabled']
     only_if 'kubectl get --raw /readyz 2>/dev/null'
     only_if { ::File.exist?('/root/.kube/config') && ::File.exist?(rbac_manifest) }
   end
+
+  # Extract the long-lived token and generate a portable kubeconfig
+  jenkins_token_output = '/etc/kubernetes/jenkins-token.txt'
+  jenkins_kubeconfig_output = '/etc/kubernetes/jenkins.kubeconfig'
+  sa_name = node['kubernetes']['rbac']['jenkins']['service_account']
+  sa_namespace = node['kubernetes']['rbac']['jenkins']['namespace']
+  
+  # Get the API Server internal endpoint (usually the master's IP)
+  api_server = "https://#{node['ipaddress']}:6443"
+
+  execute 'generate-jenkins-kubeconfig' do
+    command <<-EOH
+      TOKEN=$(kubectl get secret #{sa_name}-token -n #{sa_namespace} \
+        -o go-template='{{.data.token | base64decode}}' 2>/dev/null)
+      
+      if [ -n "$TOKEN" ]; then
+        echo -n "$TOKEN" > #{jenkins_token_output}
+        
+        # Create a portable kubeconfig using the internal CA and the token
+        kubectl config set-cluster homelab \
+          --certificate-authority=/etc/kubernetes/pki/ca.crt \
+          --embed-certs=true \
+          --server=#{api_server} \
+          --kubeconfig=#{jenkins_kubeconfig_output}
+          
+        kubectl config set-credentials #{sa_name} \
+          --token="$TOKEN" \
+          --kubeconfig=#{jenkins_kubeconfig_output}
+          
+        kubectl config set-context jenkins-context \
+          --cluster=homelab \
+          --user=#{sa_name} \
+          --namespace=default \
+          --kubeconfig=#{jenkins_kubeconfig_output}
+          
+        kubectl config use-context jenkins-context \
+          --kubeconfig=#{jenkins_kubeconfig_output}
+          
+        chmod 600 #{jenkins_kubeconfig_output}
+      fi
+    EOH
+    retries 3
+    retry_delay 5
+    only_if { ::File.exist?('/root/.kube/config') }
+    # Only run if the token file is missing or the kubeconfig is missing
+    not_if { ::File.exist?(jenkins_kubeconfig_output) }
+  end
+
+  file jenkins_token_output do
+    owner 'root'
+    group 'root'
+    mode '0600'
+  end
+  
+  file jenkins_kubeconfig_output do
+    owner 'root'
+    group 'root'
+    mode '0600'
+  end
 end
 
 # --- Prometheus monitoring RBAC ---

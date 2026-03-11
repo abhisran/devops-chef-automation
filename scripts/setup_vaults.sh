@@ -100,10 +100,43 @@ rm -f "${TMPFILE}"
 echo "  ✓ nagios_credentials/admin_password vault created"
 
 # -----------------------------------------------
-# 4. Create App Versions Data Bag (non-sensitive, no encryption needed)
+# 4. Create Jenkins Kubeconfig Vault (for agent access)
 # -----------------------------------------------
 echo ""
-echo "[4/4] Creating app_versions data bag (centralized version management)..."
+echo "[4/5] Creating Jenkins kubeconfig vault (jenkins_credentials/kubeconfig)..."
+echo "  Note: You must first extract the token from the K8s Master at /etc/kubernetes/jenkins-token.txt"
+
+# Ask user for the kubeconfig file path or skip if not ready
+KUBECONFIG_PATH=""
+read -e -p "  Enter path to Jenkins kubeconfig file (or press Enter to skip): " KUBECONFIG_PATH
+
+if [ -n "${KUBECONFIG_PATH}" ] && [ -f "${KUBECONFIG_PATH}" ]; then
+  TMPFILE=$(mktemp)
+  cat > "${TMPFILE}" <<EOF
+{
+  "id": "kubeconfig",
+  "kubeconfig": $(ruby -rjson -e "print JSON.generate(File.read('${KUBECONFIG_PATH}'))")
+}
+EOF
+
+  knife vault delete jenkins_credentials kubeconfig -y --mode client 2>/dev/null || true
+  knife vault create jenkins_credentials kubeconfig \
+    --json "${TMPFILE}" \
+    --search "name:${JENKINS_CLIENTS//,/ OR name:}" \
+    --admins "${ADMIN_USER}" \
+    --mode client
+
+  rm -f "${TMPFILE}"
+  echo "  ✓ jenkins_credentials/kubeconfig vault created"
+else
+  echo "  ⊘ Kubeconfig path empty or invalid (skipping vault creation)"
+fi
+
+# -----------------------------------------------
+# 5. Create App Versions Data Bag (non-sensitive, no encryption needed)
+# -----------------------------------------------
+echo ""
+echo "[5/5] Creating app_versions data bag (centralized version management)..."
 
 # Create temporary JSON for the data bag (must end in .json for knife)
 TMPFILE=$(mktemp /tmp/app_versions.XXXXXX.json)
