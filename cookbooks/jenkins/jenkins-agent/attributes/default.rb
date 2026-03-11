@@ -23,3 +23,19 @@ default['jenkins']['agent']['docker']['packages'] = %w(
 # kubectl
 default['jenkins']['agent']['kubectl']['enabled'] = true
 default['jenkins']['agent']['kubectl']['k8s_version'] = '1.33'
+
+# Terraform
+default['jenkins']['agent']['terraform']['enabled'] = true
+default['jenkins']['agent']['terraform']['version'] = nil
+
+# Azure CLI
+default['jenkins']['agent']['azure_cli']['enabled'] = true
+
+# AWS CLI
+default['jenkins']['agent']['aws_cli']['enabled'] = true
+
+# Other build tools
+default['jenkins']['agent']['jq']['enabled'] = true
+default['jenkins']['agent']['ansible']['enabled'] = true
+default['jenkins']['agent']['helm']['enabled'] = true
+default['jenkins']['agent']['python']['enabled'] = true
