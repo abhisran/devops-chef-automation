@@ -1,0 +1,12 @@
+name 'nfs-client'
+maintainer 'Abhishek Ranjan'
+maintainer_email 'abhisran6@gmail.com'
+license 'All Rights Reserved'
+description 'Installs/Configures NFS client for shared storage'
+version '0.1.0'
+chef_version '>= 16.0'
+
+depends 'apt'
+depends 'package'
+depends 'nagios-client'
+depends 'prometheus-client'
