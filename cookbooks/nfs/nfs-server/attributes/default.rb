@@ -2,6 +2,7 @@
 default['nfs']['server']['exports_file'] = '/etc/exports'
 default['nfs']['server']['config_file'] = '/etc/nfs.conf'
 default['nfs']['server']['common_config_file'] = '/etc/default/nfs-common'
+default['nfs']['server']['lockd_modprobe_file'] = '/etc/modprobe.d/nfs-lockd.conf'
 
 # Fixed ports for NFS services (to allow through firewall)
 default['nfs']['server']['ports']['mountd'] = 32767

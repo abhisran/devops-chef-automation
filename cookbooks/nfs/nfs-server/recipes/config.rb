@@ -47,6 +47,14 @@ file '/etc/sysctl.d/99-nfs-lockd.conf' do
   mode '0644'
 end
 
+# Lockd modprobe configuration (extra layer for boot-time/reload)
+file node['nfs']['server']['lockd_modprobe_file'] do
+  content "options lockd nlm_tcpport=#{node['nfs']['server']['ports']['lockd']} nlm_udpport=#{node['nfs']['server']['ports']['lockd']}\n"
+  owner 'root'
+  group 'root'
+  mode '0644'
+end
+
 # Deploy /etc/exports
 template node['nfs']['server']['exports_file'] do
   source 'exports.erb'
