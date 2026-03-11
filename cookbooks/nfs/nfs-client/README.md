@@ -27,7 +27,7 @@ default_attributes(
       'mounts' => [
         {
           'local_path' => '/mnt/shared',
-          'remote_path' => '192.168.1.10:/srv/nfs/shared',
+          'remote_path' => '192.168.1.79:/srv/nfs/shared',
           'options' => 'rw,sync,hard,intr'
         }
       ]
