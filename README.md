@@ -1,147 +1,42 @@
 # 🍳 Chef Infrastructure Automation
 
-Automated infrastructure deployment using Chef — Kubernetes clusters, Jenkins CI/CD, Nagios monitoring, and system configuration. Upload the cookbooks, assign run lists, and run `chef-client` to provision fully configured nodes.
+Automated, attribute-driven infrastructure deployment using Chef Infra — managing Kubernetes clusters, Jenkins CI/CD pipelines, Nagios monitoring, and distributed storage.
 
-> **📌 Project Evolution:** This project started as a Kubernetes-only automation toolkit. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), secrets management (Chef Vault), and system configuration — all driven by attributes with no hardcoded values.
+> **🚀 Project Impact:** This project serves as a complete Infrastructure-as-Code (IaC) blueprint. It automates the lifecycle of a hybrid devops environment — from base OS hardening and firewall configuration to complex application orchestration like Kubernetes and JCasC-driven Jenkins.
 
 ---
 
-## 📁 What's Inside
+## 🌟 Key Features
 
-```
+- **End-to-End Automation:** Provisioning of a full DevOps stack (K8s, CI/CD, Monitoring, Storage) from a single command.
+- **Zero Hardcoding:** 100% attribute-driven configuration; environment-specific values are injected via Chef Roles/Environments.
+- **Secrets Management:** Integrated **Chef Vault** for secure handling of SSH keys, Kubeconfigs, and credentials.
+- **Infrastructure Observability:** Auto-configuring Nagios (NRPE) and Prometheus (Node Exporter) targets for every new node.
+- **Cloud-Native Ready:** Kubernetes 1.33 cluster automation with containerd, Weave CNI, and automated RBAC for CI/CD.
+- **CI/CD as Code:** Jenkins controller fully configured via **JCasC (Jenkins Configuration as Code)**, including 30+ plugins and automated agent registration.
+
+---
+
+## 🏗️ Architecture Overview
+
+1.  **Workstation:** Cookbooks are developed and managed via **Berkshelf**.
+2.  **Chef Server:** Acts as the central hub for cookbooks, node attributes, and data bags.
+3.  **Nodes:** Run `chef-client` to pull desired state and apply configurations.
+4.  **Security Layer:** **UFW** manages role-specific firewall rules; **Chef Vault** handles encrypted data.
+
+---
+
+## 📁 Project Structure
+
+```bash
 cookbooks/
-├── grafana/
-│   └── grafana-server/    # Grafana OSS: Prometheus datasource, dashboard provisioning
-├── jenkins/
-│   ├── jenkins-server/    # Controller: JCasC, 30+ plugins, Vault SSH credentials
-│   └── jenkins-agent/     # Agent: Docker CE, kubectl, kubeconfig from Vault
-├── kubernetes/
-│   ├── k8s-master/        # Master: kubeadm init, Weave CNI, Jenkins RBAC
-│   └── k8s-worker/        # Worker: containerd, kubelet, ready to join
-├── nagios/
-│   ├── nagios-server/     # Nagios Core from source, host/service auto-config
-│   └── nagios-client/     # NRPE client: system + K8s + Jenkins checks
-├── prometheus/
-│   ├── prometheus-server/ # Prometheus: scrape configs, alert rules, TSDB
-│   └── prometheus-client/ # Node Exporter: system metrics for all nodes
-└── system/
-    ├── apt/               # APT cache management & unattended upgrades
-    ├── firewall/          # UFW firewall: role-based port rules, K8s forwarding
-    └── package/           # Essential system packages (curl, git, conntrack, etc.)
-```
-
-> 📖 Each cookbook has its own detailed README inside `cookbooks/`.
-
----
-
-## 📋 Prerequisites
-
-### On Your Workstation:
-
-```bash
-# Install Chef Workstation (includes Berkshelf, knife, etc.)
-wget https://packages.chef.io/files/stable/chef-workstation/latest/ubuntu/22.04/chef-workstation_amd64.deb
-sudo dpkg -i chef-workstation_amd64.deb
-
-# Verify installation
-chef --version
-knife --version
-berks --version
-```
-
-### On Target Nodes:
-
-- Ubuntu 18.04+ or Debian 9+
-- SSH access with sudo privileges
-- Chef Infra Client installed (via `knife bootstrap` or manually)
-
-### Optional: Chef Server Setup
-
-- Use [Hosted Chef](https://manage.chef.io/) (free for up to 5 nodes)
-- Or install Chef Server locally
-- Configure `knife.rb` with your Chef Server URL and credentials
-
----
-
-## 🚀 Usage
-
-### Option 1: With Chef Server (Recommended)
-
-#### 1. Upload cookbooks using Berkshelf
-
-```bash
-cd cookbooks/system/apt && berks install && berks upload && cd -
-cd cookbooks/system/package && berks install && berks upload && cd -
-cd cookbooks/system/firewall && berks install && berks upload && cd -
-cd cookbooks/kubernetes/k8s-master && berks install && berks upload && cd -
-cd cookbooks/kubernetes/k8s-worker && berks install && berks upload && cd -
-cd cookbooks/jenkins/jenkins-server && berks install && berks upload && cd -
-cd cookbooks/jenkins/jenkins-agent && berks install && berks upload && cd -
-cd cookbooks/nagios/nagios-server && berks install && berks upload && cd -
-cd cookbooks/nagios/nagios-client && berks install && berks upload && cd -
-cd cookbooks/prometheus/prometheus-server && berks install && berks upload && cd -
-cd cookbooks/prometheus/prometheus-client && berks install && berks upload && cd -
-cd cookbooks/grafana/grafana-server && berks install && berks upload && cd -
-```
-
-> `berks install` resolves and downloads cookbook dependencies.
-> `berks upload` uploads the cookbook and its dependencies to the Chef Server.
-
-#### 2. Assign cookbooks to nodes
-
-```bash
-# Kubernetes
-knife node run_list add <K8S_MASTER_NODE> 'recipe[apt],recipe[package],recipe[k8s-master]'
-knife node run_list add <K8S_WORKER_NODE> 'recipe[apt],recipe[package],recipe[k8s-worker]'
-
-# Jenkins
-knife node run_list add <JENKINS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[jenkins-server]'
-knife node run_list add <JENKINS_AGENT_NODE> 'recipe[apt],recipe[package],recipe[jenkins-agent]'
-
-# Nagios
-knife node run_list add <NAGIOS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[nagios-server]'
-knife node run_list add <NAGIOS_CLIENT_NODE> 'recipe[apt],recipe[package],recipe[nagios-client]'
-
-# Prometheus
-knife node run_list add <PROMETHEUS_SERVER_NODE> 'recipe[apt],recipe[package],recipe[prometheus-server]'
-knife node run_list add <PROMETHEUS_CLIENT_NODE> 'recipe[apt],recipe[package],recipe[prometheus-client]'
-
-# Grafana
-knife node run_list add <GRAFANA_SERVER_NODE> 'recipe[apt],recipe[package],recipe[grafana-server]'
-```
-
-#### 3. Apply on target nodes
-
-```bash
-sudo chef-client
-```
-
-Or run remotely from your workstation:
-
-```bash
-knife ssh 'name:k8s-*' 'sudo chef-client' --ssh-user <SSH_USER>
-knife ssh 'name:jenkins-*' 'sudo chef-client' --ssh-user <SSH_USER>
-knife ssh 'name:nagios-*' 'sudo chef-client' --ssh-user <SSH_USER>
-knife ssh 'name:prom-*' 'sudo chef-client' --ssh-user <SSH_USER>
-knife ssh 'name:grafana-*' 'sudo chef-client' --ssh-user <SSH_USER>
-```
-
-### Option 2: Without Chef Server (Chef Zero/Local Mode)
-
-```bash
-# 1. Copy cookbooks to target node
-scp -r cookbooks/ <SSH_USER>@<NODE_IP>:/tmp/
-
-# 2. SSH into node
-ssh <SSH_USER>@<NODE_IP>
-
-# 3. Install Chef Infra Client
-curl -L https://omnitruck.chef.io/install.sh | sudo bash
-
-# 4. Run chef-client locally (example: master node)
-sudo chef-client -z \
-  -o 'recipe[apt],recipe[package],recipe[k8s-master]' \
-  --cookbook-path /tmp/cookbooks/system:/tmp/cookbooks/kubernetes
+├── kubernetes/        # K8s 1.33: kubeadm, containerd, Weave CNI, RBAC
+├── jenkins/           # CI/CD: JCasC, OpenJDK 21, Docker Agents, kubectl
+├── nagios/            # Monitoring: Nagios Core 4.5.11 (source), NRPE 4.1.0
+├── prometheus/        # Metrics: Prometheus 2.53.3, Node Exporter 1.8.2
+├── grafana/           # Visualization: Grafana 12.x, Unified Alerting
+├── nfs/               # Storage: Kernel-based NFS Server/Client
+└── system/            # Core: UFW Firewall, APT management, Base Packages
 ```
 
 ---
@@ -150,44 +45,56 @@ sudo chef-client -z \
 
 | Category | Technologies |
 |----------|-------------|
-| **Configuration Management** | Chef Infra, Chef Vault, Berkshelf |
-| **Container Orchestration** | Kubernetes 1.33, kubeadm, containerd, Weave CNI |
-| **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
-| **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
-| **Visualization** | Grafana OSS 12.x, Prometheus datasource, dashboard provisioning |
-| **Security** | UFW firewall (role-based), Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
-| **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
+| **Config Management** | Chef Infra 18+, Berkshelf, Chef Vault, Data Bags |
+| **Orchestration** | Kubernetes 1.33, kubeadm, containerd, Weave CNI |
+| **CI/CD** | Jenkins (LTS), JCasC, Docker CE, kubectl |
+| **Monitoring** | Nagios Core 4.5.11, Prometheus 2.53.3, Node Exporter 1.8.2 |
+| **Visualization** | Grafana OSS 12.x, Unified Alerting |
+| **Storage & Security** | NFS (Kernel), UFW Firewall, RBAC, SSL/TLS |
+| **OS/Platform** | Ubuntu 22.04 LTS, Debian 12, systemd, Apache2 |
 
 ---
 
-## 💡 Quick Tips
+## 🚀 Quick Start
 
-**Check if Chef Server has your cookbooks:**
+### 1. Upload the Stack
+
 ```bash
-knife cookbook list
+# Upload core system and applications
+for cb in system/apt system/package system/firewall kubernetes/k8s-master \
+          kubernetes/k8s-worker jenkins/jenkins-server jenkins/jenkins-agent \
+          nagios/nagios-server nagios/nagios-client prometheus/prometheus-server \
+          prometheus/prometheus-client grafana/grafana-server nfs/nfs-server; do
+    cd cookbooks/$cb && berks install && berks upload && cd -
+done
 ```
 
-**See a node's current run-list:**
+### 2. Provision Nodes
+
 ```bash
-knife node show <NODE> -a run_list
+# Example: Deploying a Kubernetes Master
+knife node run_list add k8s-master 'recipe[apt],recipe[package],recipe[k8s-master]'
+ssh k8s-master 'sudo chef-client'
+
+# Example: Deploying Jenkins Controller
+knife node run_list add jenkins-server 'recipe[apt],recipe[package],recipe[jenkins-server]'
+ssh jenkins-server 'sudo chef-client'
 ```
 
-**Add recipes to a node's run-list:**
-```bash
-knife node run_list add <NODE> 'recipe[apt],recipe[package],recipe[jenkins-agent]'
-```
+---
 
-**Verify Kubernetes cluster after setup:**
-```bash
-kubectl get nodes
-```
+## 💡 Engineering Standards
+
+- **Idempotency:** Every recipe is tested to ensure multiple runs do not change the system state unless configuration changes.
+- **Modularity:** Separation of concerns between `install`, `config`, and `service` recipes within cookbooks.
+- **Validation:** Automatic configuration validation (e.g., `promtool` for Prometheus, `nagios -v` for Nagios) before service restarts.
 
 ---
 
 ## 👤 Author
 
 **Abhishek Ranjan** • DevOps Engineer
-📧 abhisran6@gmail.com
+📧 [abhisran6@gmail.com](mailto:abhisran6@gmail.com)
 💼 [LinkedIn](https://linkedin.com/in/abhishek-ranjan-4b95a0155)
 🐙 [GitHub](https://github.com/abhisran)
 
