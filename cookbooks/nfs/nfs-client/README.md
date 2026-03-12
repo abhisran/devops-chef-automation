@@ -1,20 +1,69 @@
-# nfs-client Cookbook
+# NFS Client Cookbook
 
-Installs and configures an NFS client for shared storage.
+> **Author:** Abhishek Ranjan
+> **Cookbook:** `nfs-client`
+> **Last Updated:** 2025
 
-## What It Does
+---
 
-1. **install.rb** — Installs `nfs-common` package.
-2. **mount.rb** — Creates local mount points and mounts remote NFS shares.
-3. **default.rb** — Orchestrates the installation and mounting process.
+## Overview
+
+The `nfs-client` cookbook installs the necessary tools to mount NFS shares and manages persistent mount points on Debian/Ubuntu systems.
+
+**Key facts:**
+- Installs `nfs-common` package
+- Manages local mount points and `/etc/fstab`
+- Fully attribute-driven mount definitions
+- Integrates with Nagios and Prometheus for node-level monitoring
+
+---
+
+## Infrastructure Details
+
+| Component | Value |
+|-----------|-------|
+| **Package** | `nfs-common` |
+| **Mount Points** | User-defined via attributes |
+| **Supported Protocols** | NFSv3, NFSv4 |
+| **Default NFS Server** | `192.168.1.79` |
+
+---
+
+## Recipes
+
+### default
+Includes `apt`, `package`, `nfs-client::install`, `nfs-client::mount`, `nagios-client`, and `prometheus-client` to ensure the client is fully configured and monitored.
+
+### install
+Installs the `nfs-common` package, which provides the `mount.nfs` utility.
+
+### mount
+Iterates through `node['nfs']['client']['mounts']` and for each entry:
+- Creates the local directory (mount point) if it doesn't exist
+- Mounts the remote share with specified options
+- Ensures the mount is persistent across reboots (managed by Chef's `mount` resource)
+
+---
 
 ## Attributes
 
 | Attribute | Default | Description |
-|---|---|---|
-| `['nfs']['client']['mounts']` | `[]` | Array of NFS mount definitions |
+|-----------|---------|-------------|
+| `node['nfs']['client']['mounts']` | `[]` | Array of mount definitions (local_path, remote_path, options) |
+
+---
 
 ## Usage
+
+### Install & Upload
+
+```bash
+cd nfs/nfs-client
+berks install    # resolves cookbook dependencies
+berks upload     # uploads cookbook + dependencies to Chef Server
+```
+
+### Assign to Node
 
 Add `nfs-client` to the node's run list and define the mounts in attributes.
 
@@ -36,13 +85,10 @@ default_attributes(
 )
 ```
 
-## Recipes
+## License
 
-### default
-Includes `apt`, `package`, `nfs-client::install`, `nfs-client::mount`, `nagios-client`, and `prometheus-client`.
+All Rights Reserved
 
-### install
-Installs the necessary `nfs-common` package.
+## Author
 
-### mount
-Iterates through `node['nfs']['client']['mounts']` and ensures each is created and mounted.
+Abhishek Ranjan
