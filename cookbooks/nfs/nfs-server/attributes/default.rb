@@ -15,7 +15,7 @@ default['nfs']['server']['exports'] = [
   {
     'path' => '/srv/nfs/shared',
     'network' => '192.168.1.0/24',
-    'options' => 'rw,sync,no_subtree_check,no_root_squash',
+    'options' => 'rw,sync,no_subtree_check,no_root_squash,insecure',
   },
 ]
 
