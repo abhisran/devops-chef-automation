@@ -1,4 +1,5 @@
 default['jenkins']['java_package'] = 'openjdk-21-jre'
+default['jenkins']['jenkins_version'] = nil
 default['jenkins']['port'] = 8080
 default['jenkins']['java_args'] = '-Xmx1024m -Xms512m'
 default['jenkins']['home'] = '/var/lib/jenkins'
@@ -25,9 +26,10 @@ default['jenkins']['agents'] = [
   },
 ]
 
-default['jenkins']['plugin_manager']['version'] = '2.13.0'
-default['jenkins']['plugin_manager']['jar_path'] = '/opt/jenkins-plugin-manager.jar'
+default['jenkins']['plugin_manager']['version'] = '2.14.0'
+default['jenkins']['plugin_manager']['jar_path'] = "/opt/jenkins-plugin-manager-#{node['jenkins']['plugin_manager']['version']}.jar"
 default['jenkins']['war_path'] = '/usr/share/java/jenkins.war'
+default['jenkins']['plugins_upgrade'] = false
 
 # Firewall
 default['firewall']['rule_groups']['jenkins_server']['enabled'] = true

@@ -29,8 +29,12 @@ file '/etc/apt/sources.list.d/jenkins.list' do
   notifies :update, 'apt_update[update-after-jenkins-repo]', :immediately
 end
 
-apt_update 'update-after-jenkins-repo' do
-  action :nothing
+apt_update 'update-before-jenkins-install' do
+  frequency 86400
+  action :periodic
 end
 
-package 'jenkins'
+package 'jenkins' do
+  version node['jenkins']['jenkins_version'] if node['jenkins']['jenkins_version']
+  action :install
+end

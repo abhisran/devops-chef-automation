@@ -17,16 +17,35 @@ end
 
 execute 'download-jenkins-plugin-manager' do
   command "curl -fsSL -o #{pm_jar} #{pm_url}"
-  creates pm_jar
+  not_if { ::File.exist?(pm_jar) }
   live_stream false
 end
 
+# Determine the plugin list. If 'plugins_upgrade' is true, we discover all existing plugins
+# on disk to ensure we reconcile and update the entire suite.
+plugin_list = node['jenkins']['plugins'].dup
+
+if node['jenkins']['plugins_upgrade'] && ::Dir.exist?(plugin_dir)
+  # Find all currently installed plugin files (.jpi or .hpi)
+  installed_plugins = Dir.glob("#{plugin_dir}/*.{jpi,hpi}").map { |f| File.basename(f, '.*') }
+  plugin_list = (plugin_list + installed_plugins).uniq
+  Chef::Log.info("Plugins Upgrade enabled: Discovered #{installed_plugins.length} installed plugins to reconcile.")
+end
+
 file "#{node['jenkins']['home']}/plugins.txt" do
-  content node['jenkins']['plugins'].sort.join("\n") + "\n"
+  content plugin_list.sort.join("\n") + "\n"
   owner node['jenkins']['user']
   group node['jenkins']['group']
   mode '0644'
   notifies :run, 'execute[install-jenkins-plugins]', :immediately
+end
+
+# Explicitly trigger the upgrade check even if plugins.txt hasn't changed
+log 'trigger-jenkins-plugin-upgrade' do
+  message 'Forcing full Jenkins plugin upgrade check...'
+  level :info
+  notifies :run, 'execute[install-jenkins-plugins]', :immediately
+  only_if { node['jenkins']['plugins_upgrade'] }
 end
 
 execute 'install-jenkins-plugins' do
