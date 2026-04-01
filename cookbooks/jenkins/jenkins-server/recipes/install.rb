@@ -26,7 +26,7 @@ file '/etc/apt/sources.list.d/jenkins.list' do
   owner 'root'
   group 'root'
   mode '0644'
-  notifies :update, 'apt_update[update-after-jenkins-repo]', :immediately
+  notifies :update, 'apt_update[update-before-jenkins-install]', :immediately
 end
 
 apt_update 'update-before-jenkins-install' do
