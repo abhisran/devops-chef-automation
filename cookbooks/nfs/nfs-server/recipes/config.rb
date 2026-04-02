@@ -9,7 +9,7 @@ node['nfs']['server']['exports'].each do |export|
   directory export['path'] do
     owner 'nobody'
     group 'nogroup'
-    mode '0755'
+    mode '0777'
     recursive true
   end
 end

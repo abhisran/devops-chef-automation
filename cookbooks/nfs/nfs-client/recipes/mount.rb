@@ -10,7 +10,7 @@ node['nfs']['client']['mounts'].each do |m|
     recursive true
     owner 'nobody'
     group 'nogroup'
-    mode '0755'
+    mode '0777'
     action :create
   end
 
