@@ -32,7 +32,7 @@ echo ""
 # -----------------------------------------------
 # 1. Generate Jenkins SSH key pair
 # -----------------------------------------------
-echo "[1/4] Generating Jenkins SSH key pair..."
+echo "[1/6] Generating Jenkins SSH key pair..."
 
 if [ ! -f "${KEY_DIR}/jenkins_agent_key" ]; then
   ssh-keygen -t ed25519 -f "${KEY_DIR}/jenkins_agent_key" -N "" -C "jenkins-agent-ssh-key"
@@ -45,7 +45,7 @@ fi
 # 2. Create Jenkins Credentials Vault
 # -----------------------------------------------
 echo ""
-echo "[2/4] Creating Jenkins credentials vault (jenkins_credentials/ssh_keys)..."
+echo "[2/6] Creating Jenkins credentials vault (jenkins_credentials/ssh_keys)..."
 
 # Create temporary JSON for the vault item
 TMPFILE=$(mktemp)
@@ -74,7 +74,7 @@ echo "  ✓ jenkins_credentials/ssh_keys vault created"
 # 3. Create Nagios Credentials Vault
 # -----------------------------------------------
 echo ""
-echo "[3/4] Creating Nagios credentials vault (nagios_credentials/admin_password)..."
+echo "[3/6] Creating Nagios credentials vault (nagios_credentials/admin_password)..."
 
 read -sp "  Enter Nagios admin password (nagiosadmin): " NAGIOS_PASSWORD
 echo ""
@@ -100,10 +100,44 @@ rm -f "${TMPFILE}"
 echo "  ✓ nagios_credentials/admin_password vault created"
 
 # -----------------------------------------------
-# 4. Create Jenkins Kubeconfig Vault (for agent access)
+# 4. Create Alertmanager Credentials Vault
 # -----------------------------------------------
 echo ""
-echo "[4/5] Creating Jenkins kubeconfig vault (jenkins_credentials/kubeconfig)..."
+echo "[4/6] Creating Alertmanager credentials vault (alertmanager_credentials/telegram)..."
+
+read -sp "  Enter Telegram Bot Token: " TELEGRAM_TOKEN
+echo ""
+read -p "  Enter Telegram Chat ID: " TELEGRAM_CHAT_ID
+
+TMPFILE=$(mktemp)
+cat > "${TMPFILE}" <<EOF
+{
+  "id": "telegram",
+  "bot_token": "${TELEGRAM_TOKEN}",
+  "chat_id": "${TELEGRAM_CHAT_ID}"
+}
+EOF
+
+knife vault delete alertmanager_credentials telegram -y --mode client 2>/dev/null || true
+knife data bag delete alertmanager_credentials -y 2>/dev/null || true
+
+# Alertmanager is on the same node as Prometheus server
+PROM_SERVER_CLIENT="prometheus-server" 
+
+knife vault create alertmanager_credentials telegram \
+  --json "${TMPFILE}" \
+  --search "name:${PROM_SERVER_CLIENT}" \
+  --admins "${ADMIN_USER}" \
+  --mode client
+
+rm -f "${TMPFILE}"
+echo "  ✓ alertmanager_credentials/telegram vault created"
+
+# -----------------------------------------------
+# 5. Create Jenkins Kubeconfig Vault (for agent access)
+# -----------------------------------------------
+echo ""
+echo "[5/6] Creating Jenkins kubeconfig vault (jenkins_credentials/kubeconfig)..."
 echo "  Note: You must first extract the token from the K8s Master at /etc/kubernetes/jenkins-token.txt"
 
 # Ask user for the kubeconfig file path or skip if not ready
@@ -133,10 +167,10 @@ else
 fi
 
 # -----------------------------------------------
-# 5. Create App Versions Data Bag (non-sensitive, no encryption needed)
+# 6. Create App Versions Data Bag (non-sensitive, no encryption needed)
 # -----------------------------------------------
 echo ""
-echo "[5/5] Creating app_versions data bag (centralized version management)..."
+echo "[6/6] Creating app_versions data bag (centralized version management)..."
 
 # Create temporary JSON for the data bag (must end in .json for knife)
 TMPFILE=$(mktemp /tmp/app_versions.XXXXXX.json)
@@ -158,7 +192,8 @@ cat > "${TMPFILE}" <<'EOF'
   },
   "prometheus": {
     "server_version": "2.53.3",
-    "node_exporter_version": "1.8.2"
+    "node_exporter_version": "1.8.2",
+    "alertmanager_version": "0.27.0"
   }
 }
 EOF
@@ -179,15 +214,17 @@ echo "  Setup Complete!"
 echo "============================================"
 echo ""
 echo "Vaults created:"
-echo "  • jenkins_credentials/ssh_keys    → Jenkins server + agent (encrypted)"
-echo "  • nagios_credentials/admin_password → Nagios server (encrypted)"
+echo "  • jenkins_credentials/ssh_keys      → Jenkins server + agent (encrypted)"
+echo "  • nagios_credentials/admin_password   → Nagios server (encrypted)"
+echo "  • alertmanager_credentials/telegram  → Prometheus server (encrypted)"
 echo "Data bags created:"
-echo "  • app_versions/default            → All nodes (plain text)"
+echo "  • app_versions/default              → All nodes (plain text)"
 echo ""
 echo "Verify with:"
 echo "  knife vault list"
 echo "  knife vault show jenkins_credentials ssh_keys --mode client"
 echo "  knife vault show nagios_credentials admin_password --mode client"
+echo "  knife vault show alertmanager_credentials telegram --mode client"
 echo "  knife data bag show app_versions default"
 echo ""
 echo "SSH keys saved at:"

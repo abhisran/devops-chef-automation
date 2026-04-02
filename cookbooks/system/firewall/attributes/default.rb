@@ -200,6 +200,12 @@ default['firewall']['rule_groups']['prometheus_server']['rules'] = {
     'action' => 'allow',
     'comment' => 'Prometheus UI/API',
   },
+  'alertmanager' => {
+    'port' => '9093',
+    'protocol' => 'tcp',
+    'action' => 'allow',
+    'comment' => 'Alertmanager UI/API',
+  },
 }
 
 # Grafana server

@@ -137,12 +137,24 @@ default['prometheus']['server']['scrape_configs'] = [
   },
 ]
 
-# Firewall
+# Firewall (rules defined in firewall cookbook, only enable the group here)
 default['firewall']['rule_groups']['prometheus_server']['enabled'] = true
 
-# Alertmanager integration (disabled by default — enable when Alertmanager is deployed)
-default['prometheus']['server']['alertmanager']['enabled'] = false
+# Alertmanager integration
+default['prometheus']['server']['alertmanager']['enabled'] = true
+default['prometheus']['server']['alertmanager']['version'] = '0.27.0'
+default['prometheus']['server']['alertmanager']['install_dir'] = '/opt/alertmanager'
+default['prometheus']['server']['alertmanager']['config_dir'] = '/etc/alertmanager'
+default['prometheus']['server']['alertmanager']['storage_path'] = '/var/lib/alertmanager'
+default['prometheus']['server']['alertmanager']['listen_address'] = '0.0.0.0'
+default['prometheus']['server']['alertmanager']['port'] = '9093'
 default['prometheus']['server']['alertmanager']['targets'] = ['localhost:9093']
+
+# Alertmanager Notification (Telegram - Free)
+# Credentials managed via Chef Vault: alertmanager_credentials/telegram
+default['prometheus']['server']['alertmanager']['telegram']['enabled'] = true
+default['prometheus']['server']['alertmanager']['telegram']['bot_token'] = nil
+default['prometheus']['server']['alertmanager']['telegram']['chat_id'] = nil
 
 # Alert rules
 default['prometheus']['server']['alert_rules']['enabled'] = true
