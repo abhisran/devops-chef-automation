@@ -40,11 +40,41 @@ file "#{node['jenkins']['home']}/plugins.txt" do
   notifies :run, 'execute[install-jenkins-plugins]', :immediately
 end
 
-# Explicitly trigger the upgrade check even if plugins.txt hasn't changed
-log 'trigger-jenkins-plugin-upgrade' do
-  message 'Forcing full Jenkins plugin upgrade check...'
-  level :info
-  notifies :run, 'execute[install-jenkins-plugins]', :immediately
+# Explicitly trigger the upgrade check even if plugins.txt hasn't changed.
+# Runs the plugin manager directly and compares plugin state before/after.
+# Restart is called imperatively (not via notifies) so it only happens
+# when plugins were actually updated on disk.
+ruby_block 'trigger-jenkins-plugin-upgrade' do
+  block do
+    plugin_dir_path = "#{node['jenkins']['home']}/plugins"
+
+    state_before = Dir.glob("#{plugin_dir_path}/*.{jpi,hpi}").sort.map { |f|
+      [File.basename(f), File.size(f), File.mtime(f).to_i]
+    }
+
+    cmd = Mixlib::ShellOut.new(
+      "java -jar #{node['jenkins']['plugin_manager']['jar_path']} " \
+      "--war #{node['jenkins']['war_path']} " \
+      "--plugin-download-directory #{plugin_dir_path} " \
+      "--plugin-file #{node['jenkins']['home']}/plugins.txt --verbose",
+      timeout: 600
+    )
+    cmd.run_command
+    cmd.error!
+
+    FileUtils.chown_R(node['jenkins']['user'], node['jenkins']['group'], plugin_dir_path)
+
+    state_after = Dir.glob("#{plugin_dir_path}/*.{jpi,hpi}").sort.map { |f|
+      [File.basename(f), File.size(f), File.mtime(f).to_i]
+    }
+
+    if state_before != state_after
+      Chef::Log.info('Plugins were updated - restarting Jenkins')
+      resources('service[jenkins]').run_action(:restart)
+    else
+      Chef::Log.info('No plugin updates found - Jenkins restart not needed')
+    end
+  end
   only_if { node['jenkins']['plugins_upgrade'] }
 end
 
