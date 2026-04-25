@@ -35,10 +35,11 @@ jenkins:
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest"
-                envVars:
-                  - envVar:
-                      key: "GIT_SSH_COMMAND"
-                      value: "ssh -o StrictHostKeyChecking=no"
+                # NOTE: do NOT set GIT_SSH_COMMAND here. Git prefers it over
+                # GIT_SSH, which would bypass the wrapper script that injects
+                # Jenkins credential keys via `ssh -i <tempfile>`, breaking
+                # SSH-key-based clones. Host-key trust is handled globally by
+                # `security.gitHostKeyVerificationConfiguration` below.
 
 credentials:
   system:
@@ -83,7 +84,8 @@ credentials:
 unclassified:
   location:
     url: "<%= @jenkins_url %>"
-  gitSCM:
-    gitHostKeyVerificationConfiguration:
-      sshHostKeyVerificationStrategy: "acceptFirstConnection"
+
+security:
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "acceptFirstConnectionStrategy"
 

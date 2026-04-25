@@ -39,15 +39,22 @@ file plugins_txt do
   notifies :run, 'execute[install-jenkins-plugins]', :delayed
 end
 
-# Installs any plugins from plugins.txt that are missing from the plugin dir.
-# With --latest false, existing plugins are left in place (idempotent).
-# Triggered on plugins.txt changes, or always when plugins_upgrade is true.
+# Installs plugins from plugins.txt and resolves transitive dependencies.
+#
+# We always pass --latest true because our plugins.txt lists plugin names
+# without version pins. With --latest false, plugin-manager installs the
+# *minimum required* dep versions, which breaks when a top-level plugin has
+# been upgraded to a version that needs newer deps (results in "Plugin is
+# missing: ..." errors at Jenkins startup).
+#
+# Triggered on plugins.txt changes. Set node['jenkins']['plugins_upgrade'] to
+# true to force a re-run on every converge (pulls newer top-level versions).
 execute 'install-jenkins-plugins' do
   command "java -jar #{pm_jar} " \
           "--war #{node['jenkins']['war_path']} " \
           "--plugin-file #{plugins_txt} " \
           "--plugin-download-directory #{plugin_dir} " \
-          "--latest #{upgrade_plugins ? 'true' : 'false'}"
+          '--latest true'
   user jenkins_user
   group jenkins_group
   environment 'HOME' => node['jenkins']['home']
