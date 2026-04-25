@@ -33,7 +33,7 @@ default['kubernetes']['network_plugin'] = {
 default['kubernetes']['rbac']['jenkins']['enabled'] = true
 default['kubernetes']['rbac']['jenkins']['service_account'] = 'jenkins-deployer'
 default['kubernetes']['rbac']['jenkins']['namespace'] = 'ci-cd'
-default['kubernetes']['rbac']['jenkins']['deploy_namespaces'] = %w(default staging production)
+default['kubernetes']['rbac']['jenkins']['deploy_namespaces'] = %w(ci-cd default staging production)
 
 
 # Prometheus monitoring RBAC

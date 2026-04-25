@@ -37,8 +37,30 @@ credentials:
 <% @ssh_private_key.each_line do |line| -%>
                     <%= line.rstrip %>
 <% end -%>
+<% unless @k8s_token.to_s.strip.empty? -%>
+          - string:
+              scope: SYSTEM
+              id: "k8s-jenkins-token"
+              description: "Kubernetes ServiceAccount token for jenkins-deployer"
+              secret: "<%= @k8s_token %>"
+<% end -%>
 <% end -%>
 
 unclassified:
   location:
     url: "<%= @jenkins_url %>"
+  kubernetes:
+    clouds:
+      - name: "Home-Kubernetes"
+        serverUrl: "https://192.168.1.71:6443"
+        namespace: "ci-cd"
+        jenkinsUrl: "<%= @jenkins_url %>"
+        credentialsId: "k8s-jenkins-token"
+        skipTlsVerify: true
+        webSocket: true
+        templates:
+          - name: "k8s-agent"
+            label: "k8s-agent"
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:latest"

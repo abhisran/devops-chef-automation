@@ -22,6 +22,7 @@ ruby_block 'load-jenkins-ssh-key-for-casc' do
         node['jenkins']['vault']['item']
       )
       node.run_state['jenkins_ssh_private_key'] = vault['private_key']
+      node.run_state['jenkins_k8s_token'] = vault['k8s_token']
     end
   end
 end
@@ -38,6 +39,7 @@ template casc_path do
       jenkins_url: node['jenkins']['casc']['jenkins_url'],
       controller_executors: node['jenkins']['casc']['controller_executors'],
       ssh_private_key: node.run_state['jenkins_ssh_private_key'] || '',
+      k8s_token: node.run_state['jenkins_k8s_token'] || '',
     }
   }
   notifies :restart, 'service[jenkins]', :delayed
