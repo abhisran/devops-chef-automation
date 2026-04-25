@@ -4,8 +4,6 @@
 #
 # Copyright:: 2025, The Authors, All Rights Reserved.
 
-include_recipe 'chef-vault'
-
 template '/etc/default/jenkins' do
   source 'jenkins_defaults.erb'
   owner 'root'
@@ -76,6 +74,7 @@ file "#{node['jenkins']['home']}/.ssh/id_rsa" do
   group node['jenkins']['group']
   mode '0600'
   sensitive true
+  not_if { node.run_state['jenkins_ssh_private_key'].to_s.strip.empty? }
 end
 
 file "#{node['jenkins']['home']}/.ssh/id_rsa.pub" do
@@ -83,4 +82,5 @@ file "#{node['jenkins']['home']}/.ssh/id_rsa.pub" do
   owner node['jenkins']['user']
   group node['jenkins']['group']
   mode '0644'
+  not_if { node.run_state['jenkins_ssh_public_key'].to_s.strip.empty? }
 end

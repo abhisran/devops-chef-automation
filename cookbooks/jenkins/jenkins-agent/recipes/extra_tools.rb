@@ -11,7 +11,7 @@ package 'jq' if node['jenkins']['agent']['jq']['enabled']
 package 'ansible' if node['jenkins']['agent']['ansible']['enabled']
 
 # Maven
-package 'maven'
+package 'maven' if node['jenkins']['agent']['maven']['enabled']
 
 # Utilities
 package %w(zip unzip tar bzip2)

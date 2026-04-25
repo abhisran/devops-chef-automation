@@ -76,7 +76,7 @@ credentials:
 <% # Handle both literal newlines and escaped \n strings, then indent each line by 20 spaces
    normalized_key = @github_private_key.to_s.gsub('\n', "\n")
    normalized_key.each_line do |line| -%>
-                    <%= line.strip %>
+                    <%= line.rstrip %>
 <% end -%>
 <% end -%>
 

@@ -18,7 +18,7 @@ begin
   node.run_state['app_versions'] = app_versions
   node.default['jenkins']['java_package'] = app_versions['jenkins']['java_package'] if app_versions.dig('jenkins', 'java_package')
   node.default['jenkins']['agent']['kubectl']['k8s_version'] = app_versions['jenkins']['kubectl_version'] if app_versions.dig('jenkins', 'kubectl_version')
-rescue => e
+rescue StandardError => e
   Chef::Log.warn("app_versions data bag not available: #{e.message}. Using default attributes.")
 end
 

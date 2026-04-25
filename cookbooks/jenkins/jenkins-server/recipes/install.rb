@@ -11,8 +11,10 @@ directory '/etc/apt/keyrings' do
   recursive true
 end
 
+# Cleanup: remove legacy dearmored keyring if it exists (we now use the .asc key).
 file '/etc/apt/keyrings/jenkins-keyring.gpg' do
   action :delete
+  only_if { ::File.exist?('/etc/apt/keyrings/jenkins-keyring.gpg') }
 end
 
 execute 'add-jenkins-gpg-key' do

@@ -22,9 +22,17 @@ execute 'add-docker-gpg-key' do
   live_stream false
 end
 
+# Map kernel architecture to dpkg architecture string used by Debian/Ubuntu
+dpkg_arch = case node['kernel']['machine']
+            when 'x86_64' then 'amd64'
+            when 'aarch64' then 'arm64'
+            when 'armv7l' then 'armhf'
+            else 'amd64'
+            end
+
 # Add Docker repository
 file '/etc/apt/sources.list.d/docker.list' do
-  content "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu #{node['lsb']['codename']} stable\n"
+  content "deb [arch=#{dpkg_arch} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu #{node['lsb']['codename']} stable\n"
   mode '0644'
   notifies :update, 'apt_update[update-after-docker-repo]', :immediately
 end

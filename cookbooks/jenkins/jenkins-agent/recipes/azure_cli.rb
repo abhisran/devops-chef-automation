@@ -11,16 +11,11 @@ package %w(ca-certificates curl apt-transport-https lsb-release gnupg)
 
 # Create keyrings directory
 directory '/etc/apt/keyrings' do
+  mode '0755'
   recursive true
 end
 
-# Add Microsoft GPG key
-remote_file '/etc/apt/keyrings/microsoft.gpg' do
-  source 'https://packages.microsoft.com/keys/microsoft.asc'
-  mode '0644'
-end
-
-# Add Azure CLI repository
+# Add Azure CLI repository (apt_repository manages the GPG key)
 apt_repository 'azure-cli' do
   uri 'https://packages.microsoft.com/repos/azure-cli/'
   key 'https://packages.microsoft.com/keys/microsoft.asc'

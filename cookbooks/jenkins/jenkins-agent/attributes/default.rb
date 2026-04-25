@@ -39,3 +39,4 @@ default['jenkins']['agent']['jq']['enabled'] = true
 default['jenkins']['agent']['ansible']['enabled'] = true
 default['jenkins']['agent']['helm']['enabled'] = true
 default['jenkins']['agent']['python']['enabled'] = true
+default['jenkins']['agent']['maven']['enabled'] = true

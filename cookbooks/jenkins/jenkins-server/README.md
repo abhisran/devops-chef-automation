@@ -28,12 +28,28 @@ ssh-keygen -t rsa -b 4096 -m PEM -f jenkins_ssh_key -N '' -C 'jenkins-agent-key'
 
 ### 2. Create the Chef Vault
 
+The `ssh_keys` vault item holds four values used by the server cookbook:
+
+| Key | Used By | Purpose |
+|-----|---------|---------|
+| `private_key` | server + agent | SSH private key for controller→agent authentication |
+| `public_key` | server + agent | SSH public key (written to agent `authorized_keys`) |
+| `k8s_token` | server (JCasC) | ServiceAccount token for the Kubernetes cloud credential |
+| `github_private_key` | server (JCasC) | SSH key for GitHub SCM access (global credential) |
+
 ```bash
+# Optional: export the Kubernetes ServiceAccount token and a GitHub deploy key.
+# Leave either variable empty if you don't need that JCasC credential.
+export K8S_TOKEN="$(kubectl -n ci-cd get secret jenkins-deployer-token -o jsonpath='{.data.token}' | base64 -d)"
+export GITHUB_PRIV_KEY="$(cat ~/.ssh/github_deploy_key 2>/dev/null || true)"
+
 # Create a JSON file with the key contents (jq handles multi-line key escaping)
 jq -n \
   --arg priv "$(cat jenkins_ssh_key)" \
   --arg pub "$(cat jenkins_ssh_key.pub)" \
-  '{"id":"ssh_keys","private_key":$priv,"public_key":$pub}' > jenkins_ssh_keys.json
+  --arg k8s "${K8S_TOKEN:-}" \
+  --arg gh  "${GITHUB_PRIV_KEY:-}" \
+  '{"id":"ssh_keys","private_key":$priv,"public_key":$pub,"k8s_token":$k8s,"github_private_key":$gh}' > jenkins_ssh_keys.json
 
 # Create the vault (grant access to server + agent nodes)
 # Replace <CHEF_USERNAME> with your Chef Server username (check: knife user list)
@@ -44,7 +60,10 @@ knife vault create jenkins_credentials ssh_keys \
 
 # Clean up local files
 rm -f jenkins_ssh_key jenkins_ssh_key.pub jenkins_ssh_keys.json
+unset K8S_TOKEN GITHUB_PRIV_KEY
 ```
+
+> `k8s_token` and `github_private_key` are optional — if empty, the corresponding JCasC credential blocks are omitted.
 
 ### 3. Destroy existing credentials (if re-creating from scratch)
 
@@ -86,14 +105,15 @@ knife vault refresh jenkins_credentials ssh_keys \
 | `node['jenkins']['group']` | Jenkins system group | `jenkins` |
 | `node['jenkins']['vault']['name']` | Chef Vault name for SSH credentials | `jenkins_credentials` |
 | `node['jenkins']['vault']['item']` | Chef Vault item name | `ssh_keys` |
-| `node['jenkins']['plugin_manager']['version']` | jenkins-plugin-manager version | `2.13.0` |
-| `node['jenkins']['plugin_manager']['jar_path']` | Path to plugin manager JAR | `/opt/jenkins-plugin-manager.jar` |
+| `node['jenkins']['plugin_manager']['version']` | jenkins-plugin-manager version | `2.14.0` |
+| `node['jenkins']['plugin_manager']['jar_path']` | Path to plugin manager JAR | `/opt/jenkins-plugin-manager-<version>.jar` |
 | `node['jenkins']['war_path']` | Path to Jenkins WAR file | `/usr/share/java/jenkins.war` |
 | `node['jenkins']['plugins']` | List of plugins to install | See below |
+| `node['jenkins']['plugins_upgrade']` | If `true`, upgrade already-installed plugins to latest | `false` |
 | `node['jenkins']['casc']['enabled']` | Enable JCasC auto-configuration | `true` |
 | `node['jenkins']['casc']['config_path']` | Path to the JCasC YAML file | `/var/lib/jenkins/jenkins.yaml` |
-| `node['jenkins']['casc']['jenkins_url']` | Jenkins URL for notifications/webhooks — **override with your server's IP** | `http://192.168.1.56:8080/` |
-| `node['jenkins']['casc']['controller_executors']` | Number of executors on the controller (0 = agents only) | `0` |
+| `node['jenkins']['casc']['jenkins_url']` | Jenkins URL for notifications/webhooks — **override with your server's IP** | `http://192.168.1.75:8080/` |
+| `node['jenkins']['casc']['controller_executors']` | Executors on the controller (0 = agents only) | `0` |
 | `node['jenkins']['agents']` | List of agent node definitions | See below |
 
 ## Recipes
@@ -112,7 +132,7 @@ Deploys `/etc/default/jenkins` and a systemd override at `/etc/systemd/system/je
 
 ### plugins
 
-Downloads the official [jenkins-plugin-manager](https://github.com/jenkinsci/plugin-installation-manager-tool) CLI tool and installs plugins from `node['jenkins']['plugins']`. Automatically resolves plugin dependencies. Only re-runs when the plugin list changes.
+Downloads the official [jenkins-plugin-manager](https://github.com/jenkinsci/plugin-installation-manager-tool) CLI tool and installs plugins from `node['jenkins']['plugins']`. Automatically resolves plugin dependencies. Reinstalls whenever the plugin list changes; set `node['jenkins']['plugins_upgrade'] = true` to force an upgrade of already-installed plugins on every converge.
 
 Default plugins:
 
@@ -158,7 +178,7 @@ This cookbook supports loading version attributes from the `app_versions` Chef V
 
 ```bash
 knife vault create app_versions default \
-  '{"jenkins":{"java_package":"openjdk-21-jre","plugin_manager_version":"2.13.0"}}' \
+  '{"jenkins":{"java_package":"openjdk-21-jre","plugin_manager_version":"2.14.0"}}' \
   --search "recipe:jenkins-server OR recipe:jenkins-agent" \
   --admins "admin_user"
 ```

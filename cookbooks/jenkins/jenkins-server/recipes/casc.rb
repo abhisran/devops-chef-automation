@@ -9,8 +9,6 @@
 
 return unless node['jenkins']['casc']['enabled']
 
-include_recipe 'chef-vault'
-
 casc_path = node['jenkins']['casc']['config_path']
 
 # Ensure credentials are loaded from vault (may already be partially in run_state from config recipe)
@@ -46,8 +44,4 @@ template casc_path do
     }
   }
   notifies :restart, 'service[jenkins]', :delayed
-end
-
-service 'jenkins' do
-  action :nothing
 end
