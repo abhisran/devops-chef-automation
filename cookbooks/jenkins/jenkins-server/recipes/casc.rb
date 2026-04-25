@@ -13,16 +13,18 @@ include_recipe 'chef-vault'
 
 casc_path = node['jenkins']['casc']['config_path']
 
-# Ensure SSH keys are loaded from vault (may already be in run_state from config recipe)
-ruby_block 'load-jenkins-ssh-key-for-casc' do
+# Ensure credentials are loaded from vault (may already be partially in run_state from config recipe)
+ruby_block 'load-jenkins-vault-items-for-casc' do
   block do
-    unless node.run_state['jenkins_ssh_private_key']
+    # We load if EITHER is missing to ensure full state for the template
+    if node.run_state['jenkins_ssh_private_key'].nil? || node.run_state['jenkins_k8s_token'].nil?
       vault = chef_vault_item(
         node['jenkins']['vault']['name'],
         node['jenkins']['vault']['item']
       )
-      node.run_state['jenkins_ssh_private_key'] = vault['private_key']
+      node.run_state['jenkins_ssh_private_key'] ||= vault['private_key']
       node.run_state['jenkins_k8s_token'] = vault['k8s_token']
+      node.run_state['github_private_key'] = vault['github_private_key']
     end
   end
 end
@@ -40,6 +42,7 @@ template casc_path do
       controller_executors: node['jenkins']['casc']['controller_executors'],
       ssh_private_key: node.run_state['jenkins_ssh_private_key'] || '',
       k8s_token: node.run_state['jenkins_k8s_token'] || '',
+      github_private_key: node.run_state['github_private_key'] || '',
     }
   }
   notifies :restart, 'service[jenkins]', :delayed

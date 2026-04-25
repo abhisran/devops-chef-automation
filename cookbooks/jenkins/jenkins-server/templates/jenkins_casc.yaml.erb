@@ -35,6 +35,10 @@ jenkins:
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest"
+                envVars:
+                  - envVar:
+                      key: "GIT_SSH_COMMAND"
+                      value: "ssh -o StrictHostKeyChecking=no"
 
 credentials:
   system:
@@ -60,7 +64,26 @@ credentials:
               description: "Kubernetes ServiceAccount token for jenkins-deployer"
               secret: "<%= @k8s_token %>"
 <% end -%>
+<% unless @github_private_key.to_s.strip.empty? -%>
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: "github-ssh-key"
+              description: "SSH key for GitHub access"
+              username: "git"
+              privateKeySource:
+                directEntry:
+                  privateKey: |
+<% # Handle both literal newlines and escaped \n strings, then indent each line by 20 spaces
+   normalized_key = @github_private_key.to_s.gsub('\n', "\n")
+   normalized_key.each_line do |line| -%>
+                    <%= line.strip %>
+<% end -%>
+<% end -%>
 
 unclassified:
   location:
     url: "<%= @jenkins_url %>"
+  gitSCM:
+    gitHostKeyVerificationConfiguration:
+      sshHostKeyVerificationStrategy: "acceptFirstConnection"
+

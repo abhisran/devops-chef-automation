@@ -29,7 +29,7 @@ default['jenkins']['agents'] = [
 default['jenkins']['plugin_manager']['version'] = '2.14.0'
 default['jenkins']['plugin_manager']['jar_path'] = "/opt/jenkins-plugin-manager-#{node['jenkins']['plugin_manager']['version']}.jar"
 default['jenkins']['war_path'] = '/usr/share/java/jenkins.war'
-default['jenkins']['plugins_upgrade'] = true
+default['jenkins']['plugins_upgrade'] = false
 
 # Firewall
 default['firewall']['rule_groups']['jenkins_server']['enabled'] = true
