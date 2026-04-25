@@ -44,3 +44,7 @@ template casc_path do
   }
   notifies :restart, 'service[jenkins]', :delayed
 end
+
+service 'jenkins' do
+  action :nothing
+end

@@ -26,7 +26,7 @@ end
 
 include_recipe 'jenkins-server::install'
 include_recipe 'jenkins-server::config'
+include_recipe 'jenkins-server::casc'
 include_recipe 'jenkins-server::service'
 include_recipe 'jenkins-server::plugins'
-include_recipe 'jenkins-server::casc'
 include_recipe 'firewall'

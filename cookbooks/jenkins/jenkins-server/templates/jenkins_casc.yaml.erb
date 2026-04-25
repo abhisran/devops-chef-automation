@@ -20,38 +20,9 @@ jenkins:
             javaPath: "<%= agent['java_path'] || '/usr/bin/java' %>"
 <% end -%>
 <% end -%>
-
-<% unless @agents.empty? || @ssh_private_key.to_s.strip.empty? -%>
-credentials:
-  system:
-    domainCredentials:
-      - credentials:
-          - basicSSHUserPrivateKey:
-              scope: SYSTEM
-              id: "jenkins-agent-ssh-key"
-              description: "SSH key for Jenkins agent connectivity"
-              username: "jenkins"
-              privateKeySource:
-                directEntry:
-                  privateKey: |
-<% @ssh_private_key.each_line do |line| -%>
-                    <%= line.rstrip %>
-<% end -%>
-<% unless @k8s_token.to_s.strip.empty? -%>
-          - string:
-              scope: SYSTEM
-              id: "k8s-jenkins-token"
-              description: "Kubernetes ServiceAccount token for jenkins-deployer"
-              secret: "<%= @k8s_token %>"
-<% end -%>
-<% end -%>
-
-unclassified:
-  location:
-    url: "<%= @jenkins_url %>"
-  kubernetes:
-    clouds:
-      - name: "Home-Kubernetes"
+  clouds:
+    - kubernetes:
+        name: "Home-Kubernetes"
         serverUrl: "https://192.168.1.71:6443"
         namespace: "ci-cd"
         jenkinsUrl: "<%= @jenkins_url %>"
@@ -64,3 +35,32 @@ unclassified:
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+<% unless @agents.empty? || @ssh_private_key.to_s.strip.empty? -%>
+          - basicSSHUserPrivateKey:
+              scope: SYSTEM
+              id: "jenkins-agent-ssh-key"
+              description: "SSH key for Jenkins agent connectivity"
+              username: "jenkins"
+              privateKeySource:
+                directEntry:
+                  privateKey: |
+<% @ssh_private_key.each_line do |line| -%>
+                    <%= line.rstrip %>
+<% end -%>
+<% end -%>
+<% unless @k8s_token.to_s.strip.empty? -%>
+          - string:
+              scope: SYSTEM
+              id: "k8s-jenkins-token"
+              description: "Kubernetes ServiceAccount token for jenkins-deployer"
+              secret: "<%= @k8s_token %>"
+<% end -%>
+
+unclassified:
+  location:
+    url: "<%= @jenkins_url %>"

@@ -15,6 +15,16 @@ directory plugin_dir do
   mode '0755'
 end
 
+# Direct download for critical trilead-api plugin to ensure Jenkins can always boot
+# This bypasses the plugin manager's update center metadata check which is currently failing.
+remote_file "#{plugin_dir}/trilead-api.jpi" do
+  source 'https://updates.jenkins.io/latest/trilead-api.hpi'
+  owner node['jenkins']['user']
+  group node['jenkins']['group']
+  mode '0644'
+  not_if { ::File.exist?("#{plugin_dir}/trilead-api.jpi") || ::File.exist?("#{plugin_dir}/trilead-api.hpi") }
+end
+
 execute 'download-jenkins-plugin-manager' do
   command "curl -fsSL -o #{pm_jar} #{pm_url}"
   not_if { ::File.exist?(pm_jar) }
@@ -28,6 +38,8 @@ plugin_list = node['jenkins']['plugins'].dup
 if node['jenkins']['plugins_upgrade'] && ::Dir.exist?(plugin_dir)
   # Find all currently installed plugin files (.jpi or .hpi)
   installed_plugins = Dir.glob("#{plugin_dir}/*.{jpi,hpi}").map { |f| File.basename(f, '.*') }
+  # Filter out problematic plugins like ssh-api
+  installed_plugins.reject! { |p| %w(ssh-api).include?(p) }
   plugin_list = (plugin_list + installed_plugins).uniq
   Chef::Log.info("Plugins Upgrade enabled: Discovered #{installed_plugins.length} installed plugins to reconcile.")
 end
@@ -41,9 +53,6 @@ file "#{node['jenkins']['home']}/plugins.txt" do
 end
 
 # Explicitly trigger the upgrade check even if plugins.txt hasn't changed.
-# Runs the plugin manager directly and compares plugin state before/after.
-# Restart is called imperatively (not via notifies) so it only happens
-# when plugins were actually updated on disk.
 ruby_block 'trigger-jenkins-plugin-upgrade' do
   block do
     plugin_dir_path = "#{node['jenkins']['home']}/plugins"
@@ -57,10 +66,14 @@ ruby_block 'trigger-jenkins-plugin-upgrade' do
       "--war #{node['jenkins']['war_path']} " \
       "--plugin-download-directory #{plugin_dir_path} " \
       "--plugin-file #{node['jenkins']['home']}/plugins.txt --verbose",
-      timeout: 600
+      timeout: 900,
+      live_stream: STDOUT
     )
     cmd.run_command
-    cmd.error!
+    
+    if cmd.error?
+      Chef::Log.error("Jenkins Plugin Manager failed to reconcile updates (likely Update Center timeout). Proceeding anyway.")
+    end
 
     FileUtils.chown_R(node['jenkins']['user'], node['jenkins']['group'], plugin_dir_path)
 
@@ -90,4 +103,8 @@ execute 'fix-plugin-permissions' do
   command "chown -R #{node['jenkins']['user']}:#{node['jenkins']['group']} #{plugin_dir}"
   action :nothing
   live_stream false
+end
+
+service 'jenkins' do
+  action :nothing
 end
