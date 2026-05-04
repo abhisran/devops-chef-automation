@@ -64,6 +64,20 @@ subjects:
   - kind: ServiceAccount
     name: <%= @sa_name %>
     namespace: <%= @sa_namespace %>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-default-admin-<%= ns %>
+  namespace: <%= ns %>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: <%= @sa_namespace %>
 <% end -%>
 ---
 apiVersion: rbac.authorization.k8s.io/v1
