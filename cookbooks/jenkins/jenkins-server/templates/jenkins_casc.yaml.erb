@@ -80,6 +80,14 @@ credentials:
                     <%= line.rstrip %>
 <% end -%>
 <% end -%>
+<% unless @dockerhub_username.to_s.strip.empty? || @dockerhub_password.to_s.strip.empty? -%>
+          - usernamePassword:
+              scope: GLOBAL
+              id: "dockerhub-secret"
+              username: "<%= @dockerhub_username %>"
+              password: "<%= @dockerhub_password %>"
+              description: "Docker Hub credentials for image pushing"
+<% end -%>
 
 unclassified:
   location:

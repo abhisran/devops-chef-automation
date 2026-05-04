@@ -47,13 +47,19 @@ fi
 echo ""
 echo "[2/6] Creating Jenkins credentials vault (jenkins_credentials/ssh_keys)..."
 
+read -p "  Enter Docker Hub username: " DOCKERHUB_USER
+read -sp "  Enter Docker Hub password/token: " DOCKERHUB_PASS
+echo ""
+
 # Create temporary JSON for the vault item
 TMPFILE=$(mktemp)
 cat > "${TMPFILE}" <<EOF
 {
   "id": "ssh_keys",
   "private_key": $(ruby -rjson -e "print JSON.generate(File.read('${KEY_DIR}/jenkins_agent_key'))"),
-  "public_key": $(ruby -rjson -e "print JSON.generate(File.read('${KEY_DIR}/jenkins_agent_key.pub').strip())")
+  "public_key": $(ruby -rjson -e "print JSON.generate(File.read('${KEY_DIR}/jenkins_agent_key.pub').strip())"),
+  "dockerhub_username": "${DOCKERHUB_USER}",
+  "dockerhub_password": "${DOCKERHUB_PASS}"
 }
 EOF
 
