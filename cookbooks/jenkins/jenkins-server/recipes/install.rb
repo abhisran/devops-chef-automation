@@ -38,5 +38,5 @@ end
 
 package 'jenkins' do
   version node['jenkins']['jenkins_version'] if node['jenkins']['jenkins_version']
-  action :install
+  action :upgrade
 end
