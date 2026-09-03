@@ -54,7 +54,6 @@ default['jenkins']['plugins'] = %w(
   matrix-auth
   antisamy-markup-formatter
   authorize-project
-  blueocean
   pipeline-graph-view
   pipeline-stage-view
   dashboard-view
