@@ -28,4 +28,5 @@ Gemfile.lock
 .vscode/
 .idea/
 .nvimlog
+.antigravitycli/
 keys/

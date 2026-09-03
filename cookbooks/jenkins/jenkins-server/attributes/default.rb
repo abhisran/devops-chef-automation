@@ -1,5 +1,5 @@
 default['jenkins']['java_package'] = 'openjdk-21-jre'
-default['jenkins']['jenkins_version'] = '2.555.1'
+default['jenkins']['jenkins_version'] = '2.568.3'
 default['jenkins']['port'] = 8080
 default['jenkins']['java_args'] = '-Xmx1024m -Xms512m'
 default['jenkins']['home'] = '/var/lib/jenkins'
