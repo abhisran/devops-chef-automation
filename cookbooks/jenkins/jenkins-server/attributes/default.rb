@@ -55,6 +55,8 @@ default['jenkins']['plugins'] = %w(
   antisamy-markup-formatter
   authorize-project
   blueocean
+  pipeline-graph-view
+  pipeline-stage-view
   dashboard-view
   timestamper
   ws-cleanup
