@@ -12,7 +12,7 @@ Automated, attribute-driven infrastructure deployment using Chef Infra — manag
 - **Zero Hardcoding:** 100% attribute-driven configuration; environment-specific values are injected via Chef Roles/Environments.
 - **Secrets Management:** Integrated **Chef Vault** for secure handling of SSH keys, Kubeconfigs, and credentials.
 - **Infrastructure Observability:** Auto-configuring Nagios (NRPE) and Prometheus (Node Exporter) targets for every new node.
-- **Cloud-Native Ready:** Kubernetes 1.33 cluster automation with containerd, Weave CNI, and automated RBAC for CI/CD.
+- **Cloud-Native Ready:** Kubernetes 1.35 cluster automation with containerd, Weave CNI, and automated RBAC for CI/CD.
 - **CI/CD as Code:** Jenkins controller fully configured via **JCasC (Jenkins Configuration as Code)**, including 30+ plugins and automated agent registration.
 
 ---
@@ -30,7 +30,7 @@ Automated, attribute-driven infrastructure deployment using Chef Infra — manag
 
 ```bash
 cookbooks/
-├── kubernetes/        # K8s 1.33: kubeadm, containerd, Weave CNI, RBAC
+├── kubernetes/        # K8s 1.35: kubeadm, containerd, Weave CNI, RBAC
 ├── jenkins/           # CI/CD: JCasC, OpenJDK 21, Docker Agents, kubectl
 ├── nagios/            # Monitoring: Nagios Core 4.5.11 (source), NRPE 4.1.0
 ├── prometheus/        # Metrics: Prometheus 2.53.3, Node Exporter 1.8.2
@@ -46,7 +46,7 @@ cookbooks/
 | Category | Technologies |
 |----------|-------------|
 | **Config Management** | Chef Infra 18+, Berkshelf, Chef Vault, Data Bags |
-| **Orchestration** | Kubernetes 1.33, kubeadm, containerd, Weave CNI |
+| **Orchestration** | Kubernetes 1.35, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins (LTS), JCasC, Docker CE, kubectl |
 | **Monitoring** | Nagios Core 4.5.11, Prometheus 2.53.3, Node Exporter 1.8.2 |
 | **Visualization** | Grafana OSS 12.x, Unified Alerting |

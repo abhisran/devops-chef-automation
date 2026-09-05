@@ -186,10 +186,10 @@ cat > "${TMPFILE}" <<'EOF'
   "jenkins": {
     "java_package": "openjdk-21-jre",
     "plugin_manager_version": "2.13.0",
-    "kubectl_version": "1.33"
+    "kubectl_version": "1.35"
   },
   "kubernetes": {
-    "version": "1.33",
+    "version": "1.35",
     "cni_version": "1.4.0"
   },
   "nagios": {

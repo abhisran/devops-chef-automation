@@ -20,7 +20,7 @@ Chef cookbook to configure a Kubernetes worker node with:
 
 | Attribute | Description | Default |
 |-----------|-------------|---------|
-| `node['kubernetes']['version']` | Kubernetes version | `1.33` |
+| `node['kubernetes']['version']` | Kubernetes version | `1.35` |
 | `node['kubernetes']['packages']` | K8s packages to install | `kubelet kubeadm kubectl` |
 | `node['kubernetes']['cni_version']` | CNI plugin version | `1.4.0` |
 
@@ -57,7 +57,7 @@ This cookbook supports loading version attributes from the `app_versions` Chef V
 
 ```bash
 knife vault create app_versions default \
-  '{"kubernetes":{"version":"1.33","cni_version":"1.4.0"}}' \
+  '{"kubernetes":{"version":"1.35","cni_version":"1.4.0"}}' \
   --search "role:k8s-worker" \
   --admins "admin_user"
 ```
