@@ -144,8 +144,8 @@ Default plugins:
 | Docker | docker-plugin, docker-workflow, docker-commons |
 | Kubernetes | kubernetes |
 | Configuration | configuration-as-code, job-dsl |
-| Security | matrix-auth, antisamy-markup-formatter, authorize-project |
-| UI | blueocean, dashboard-view |
+| UI / Visualization | pipeline-graph-view, pipeline-stage-view, dashboard-view |
+| Monitoring & API | prometheus, trilead-api |
 | Utility | timestamper, ws-cleanup, rebuild, build-timeout, mailer, email-ext |
 | Build Tools | maven-plugin, gradle, nodejs |
 

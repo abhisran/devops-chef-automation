@@ -95,7 +95,7 @@ kubeadm join <MASTER_IP>:6443 --token <TOKEN> --discovery-token-ca-cert-hash <HA
 ```ruby
 default_attributes(
   'kubernetes' => {
-    'version' => '1.31'
+    'version' => '1.35'
   }
 )
 ```

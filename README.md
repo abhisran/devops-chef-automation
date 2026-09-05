@@ -64,8 +64,9 @@ cookbooks/
 for cb in system/apt system/package system/firewall kubernetes/k8s-master \
           kubernetes/k8s-worker jenkins/jenkins-server jenkins/jenkins-agent \
           nagios/nagios-server nagios/nagios-client prometheus/prometheus-server \
-          prometheus/prometheus-client grafana/grafana-server nfs/nfs-server; do
-    cd cookbooks/$cb && berks install && berks upload && cd -
+          prometheus/prometheus-client grafana/grafana-server nfs/nfs-server \
+          nfs/nfs-client; do
+    (cd cookbooks/$cb && berks install && berks upload)
 done
 ```
 

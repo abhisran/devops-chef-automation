@@ -29,7 +29,12 @@ Chef cookbook to configure a Kubernetes master node with:
 | `node['kubernetes']['rbac']['jenkins']['enabled']` | Enable Jenkins RBAC setup | `true` |
 | `node['kubernetes']['rbac']['jenkins']['service_account']` | ServiceAccount name for Jenkins | `jenkins-deployer` |
 | `node['kubernetes']['rbac']['jenkins']['namespace']` | Namespace for the ServiceAccount | `ci-cd` |
-| `node['kubernetes']['rbac']['jenkins']['deploy_namespaces']` | Namespaces Jenkins can deploy to | `staging production` |
+| `node['kubernetes']['rbac']['jenkins']['deploy_namespaces']` | Namespaces Jenkins can deploy to | `ci-cd default staging production` |
+| `node['kubernetes']['rbac']['prometheus']['enabled']` | Enable Prometheus RBAC setup | `true` |
+| `node['kubernetes']['monitoring']['patch_manifests']` | Expose control plane metrics on 0.0.0.0 | `true` |
+| `node['kubernetes']['kube_state_metrics']['enabled']` | Deploy kube-state-metrics to cluster | `true` |
+| `node['kubernetes']['kube_state_metrics']['version']` | KSM version | `2.13.0` |
+| `node['kubernetes']['kube_state_metrics']['nodeport']` | KSM NodePort for Prometheus scraping | `30080` |
 
 ## Recipes
 
@@ -70,6 +75,14 @@ kubectl -n production get role,rolebinding
 ```
 
 See the [jenkins-agent README](../../jenkins/jenkins-agent/README.md#kubeconfig-vault-setup) for instructions on extracting the token and storing the kubeconfig in Chef Vault.
+
+### monitoring
+
+Patches static pod manifests (`/etc/kubernetes/manifests/`) for `etcd`, `kube-scheduler`, and `kube-controller-manager` to expose their metrics endpoints on `0.0.0.0` instead of `127.0.0.1`, enabling external scraping by Prometheus. Kubelet automatically reloads the static pods when manifests change.
+
+### kube_state_metrics
+
+Deploys `kube-state-metrics` (v2.13.0) into the `kube-system` namespace. Exposes cluster-level object metrics (deployments, pods, nodes, jobs) via NodePort `30080` for Prometheus.
 
 ### RBAC Permissions
 

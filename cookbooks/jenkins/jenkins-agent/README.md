@@ -113,6 +113,14 @@ sudo -u jenkins kubectl --context=production get pods
 | `node['jenkins']['agent']['docker']['packages']` | Docker packages to install | `docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` |
 | `node['jenkins']['agent']['kubectl']['enabled']` | Install kubectl and deploy kubeconfig | `true` |
 | `node['jenkins']['agent']['kubectl']['k8s_version']` | Kubernetes version for kubectl | `1.35` |
+| `node['jenkins']['agent']['terraform']['enabled']` | Install Terraform CLI | `true` |
+| `node['jenkins']['agent']['azure_cli']['enabled']` | Install Azure CLI (`az`) | `true` |
+| `node['jenkins']['agent']['aws_cli']['enabled']` | Install AWS CLI v2 | `true` |
+| `node['jenkins']['agent']['helm']['enabled']` | Install Helm CLI | `true` |
+| `node['jenkins']['agent']['ansible']['enabled']` | Install Ansible on agent | `true` |
+| `node['jenkins']['agent']['jq']['enabled']` | Install jq JSON parser | `true` |
+| `node['jenkins']['agent']['python']['enabled']` | Install Python 3 & pip | `true` |
+| `node['jenkins']['agent']['maven']['enabled']` | Install Apache Maven | `true` |
 | `node['jenkins']['vault']['name']` | Chef Vault name for credentials | `jenkins_credentials` |
 | `node['jenkins']['vault']['item']` | Chef Vault item for SSH keys | `ssh_keys` |
 | `node['jenkins']['vault']['kubeconfig_item']` | Chef Vault item for kubeconfig | `kubeconfig` |
@@ -191,6 +199,22 @@ Installs Docker CE from the official Docker apt repository. Adds the jenkins use
 ### kubectl
 
 Installs kubectl from the official Kubernetes apt repository (matching the cluster version). Reads the kubeconfig from Chef Vault (`jenkins_credentials/kubeconfig`) and deploys it to `~/.kube/config`. Pipelines can then use `kubectl --context=staging` or `kubectl --context=production` to deploy. Can be disabled via `node['jenkins']['agent']['kubectl']['enabled']`.
+
+### terraform
+
+Adds HashiCorp official repository and installs the Terraform CLI for IaC pipelines. Can be disabled via `node['jenkins']['agent']['terraform']['enabled']`.
+
+### azure_cli
+
+Adds Microsoft repository and installs Azure CLI (`az`) for cloud deployment pipelines. Can be disabled via `node['jenkins']['agent']['azure_cli']['enabled']`.
+
+### aws_cli
+
+Installs AWS CLI v2 via the official bundled installer for AWS pipelines. Can be disabled via `node['jenkins']['agent']['aws_cli']['enabled']`.
+
+### extra_tools
+
+Installs essential DevOps pipeline tooling: `jq`, `ansible`, `helm`, `python3` / `python3-pip`, and `maven`. Individual tools can be enabled/disabled via attributes.
 
 ### service
 

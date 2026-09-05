@@ -1,8 +1,8 @@
 # 🍳 Chef Cookbooks — Homelab Infrastructure as Code
 
-A collection of **12 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
+A collection of **14 Chef cookbooks** that fully automate the provisioning, configuration, and monitoring of a production-style homelab environment — Kubernetes cluster, Jenkins CI/CD pipeline, and Nagios monitoring — all managed as code.
 
-> **📌 Project Evolution:** This project started as a single Kubernetes cookbook for automating cluster provisioning. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), and system configuration — demonstrating how incremental automation compounds into a fully managed environment.
+> **📌 Project Evolution:** This project started as a single Kubernetes cookbook for automating cluster provisioning. It has since grown into a complete infrastructure-as-code solution covering CI/CD (Jenkins), monitoring (Nagios), distributed NFS storage, and system configuration — demonstrating how incremental automation compounds into a fully managed environment.
 
 ---
 
@@ -12,6 +12,7 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
 - **Jenkins CI/CD** server with Configuration as Code (JCasC), 30+ plugins, and SSH-based agents with Docker & kubectl
 - **Nagios Core** compiled from source with **30+ monitoring checks** across system, Kubernetes, and Jenkins
 - **Prometheus** time-series monitoring with Node Exporter on all nodes and configurable alert rules
+- **Distributed NFS Storage** with kernel NFS server and persistent auto-mounting clients across all nodes
 - **UFW firewall** on every node with role-based port rules, source restrictions, and K8s-aware forwarding
 - **Chef Vault** integration for secrets management (SSH keys, kubeconfig) — no plaintext credentials
 - **Fully idempotent** — every cookbook can be re-applied safely via `chef-client`
@@ -48,6 +49,10 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
                           │  Prometheus Server   │
                           │  ← node_exporter     │
                           └─────────────────────┘
+                          ┌──────────┴──────────┐
+                          │    NFS Server        │
+                          │   /srv/nfs/shared    │
+                          └─────────────────────┘
 ```
 
 > All IPs, hostnames, and credentials are **configurable via Chef attributes** — override them in a role or environment to match your network.
@@ -62,6 +67,7 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
 | **Container Orchestration** | Kubernetes 1.35, kubeadm, containerd, Weave CNI |
 | **CI/CD** | Jenkins, JCasC, jenkins-plugin-manager, Docker CE, kubectl |
 | **Monitoring** | Nagios Core 4.5.11, NRPE 4.1.0, Prometheus 2.53.3, Node Exporter 1.8.2 |
+| **Storage** | Linux Kernel NFS Server, RPCbind, persistent NFS client mounts |
 | **Security** | UFW firewall (role-based), Chef Vault (encrypted data bags), K8s RBAC, namespace isolation |
 | **Platform** | Ubuntu/Debian, systemd, Apache (Nagios UI) |
 
@@ -81,6 +87,9 @@ A collection of **12 Chef cookbooks** that fully automate the provisioning, conf
 ├── nagios/
 │   ├── nagios-server/   → Nagios Core from source, host/service auto-config
 │   └── nagios-client/   → NRPE client: system + K8s + Jenkins checks
+├── nfs/
+│   ├── nfs-server/      → Kernel NFS Server: /etc/exports, RPCbind, UFW rules
+│   └── nfs-client/      → NFS Client: mount points, persistent /etc/fstab
 ├── prometheus/
 │   ├── prometheus-server/ → Prometheus server: scrape configs, alert rules, TSDB
 │   └── prometheus-client/ → Node Exporter: system metrics for all nodes
@@ -103,19 +112,25 @@ Installs Grafana OSS via the official APT repository with attribute-driven confi
 Installs Jenkins with OpenJDK 21, deploys 30+ plugins via the official plugin manager CLI, and configures the server entirely through **Jenkins Configuration as Code (JCasC)**. Agent nodes are auto-registered via SSH using credentials stored in **Chef Vault** — zero manual setup in the Jenkins UI.
 
 ### [jenkins-agent](jenkins/jenkins-agent/)
-Prepares SSH-based build agents with **Docker CE** (docker build/push from pipelines), **kubectl** with a vault-managed kubeconfig (deploy to staging/production contexts), and all required build tools.
+Prepares SSH-based build agents with **Docker CE** (docker build/push from pipelines), **kubectl** with a vault-managed kubeconfig (deploy to staging/production contexts), and all required build tools (Terraform, Azure CLI, AWS CLI, Helm).
 
 ### [k8s-master](kubernetes/k8s-master/)
-Bootstraps the Kubernetes control plane with `kubeadm init`, installs the **Weave** network plugin, and creates **RBAC resources** for Jenkins CI/CD — a `jenkins-deployer` ServiceAccount with namespace-scoped Roles in `staging` and `production`.
+Bootstraps the Kubernetes control plane with `kubeadm init` (v1.35), installs the **Weave** network plugin, deploys `kube-state-metrics`, patches static pod manifests for metrics scraping, and creates **RBAC resources** for Jenkins CI/CD — a `jenkins-deployer` ServiceAccount with namespace-scoped Roles in `staging` and `production`.
 
 ### [k8s-worker](kubernetes/k8s-worker/)
-Installs **containerd** (with SystemdCgroup), kubeadm, and kubelet. Prepares the node to join the cluster via `kubeadm join`.
+Installs **containerd** (with SystemdCgroup), kubeadm, and kubelet (v1.35). Prepares the node to join the cluster via `kubeadm join`.
 
 ### [nagios-server](nagios/nagios-server/)
 Compiles **Nagios Core 4.5.11** from source with the NRPE plugin. Auto-generates host, hostgroup, and service configurations from node attributes — adding a new monitored host is a single attribute override.
 
 ### [nagios-client](nagios/nagios-client/)
 Installs the NRPE daemon and deploys **30+ check commands** covering system health, Kubernetes components (process + health endpoint checks), and Jenkins infrastructure.
+
+### [nfs-server](nfs/nfs-server/)
+Installs and configures `nfs-kernel-server` on Ubuntu/Debian. Manages shared directories (`/srv/nfs/shared`), `/etc/exports` templates, and opens NFS (2049) and RPCbind (111) ports in UFW.
+
+### [nfs-client](nfs/nfs-client/)
+Installs `nfs-common` utilities and manages persistent remote mount points across nodes with automatic `/etc/fstab` configuration and reboot persistence.
 
 ### [prometheus-server](prometheus/prometheus-server/)
 Installs **Prometheus 2.53.3** from official releases with attribute-driven scrape configs, alert rules (InstanceDown, HighCPU, HighMemory, DiskSpaceLow), and optional Alertmanager integration. Configuration is validated with `promtool` on every change.
